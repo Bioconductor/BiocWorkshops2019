@@ -1,4 +1,19 @@
-# R and CWL
+---
+title: "Combined CWL workshop"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{test}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---                       
+
+```{r}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
 # Instructors
 
 # Workshop Description

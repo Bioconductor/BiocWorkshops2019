@@ -4,6 +4,10 @@ Please refer to this website for detailed instructions on setting up Travis to
 build your Bioconductor Workshop chapter:
 https://bookdown.org/yihui/bookdown/github.html
 
+Be sure to enable Travis for your *fork* of the workshops repository by going
+to: https://www.travis-ci.org/account/repositories and moving the slider to the
+right.
+
 ## GitHub Personal Access Token
 
 In order to set up Travis, you will need a GitHub PAT.
@@ -45,11 +49,11 @@ git push origin gh-pages
 
 To build your book / chapter, you will need a few files:
 
+* `_bookdown.yml`
 * `.travis.yml`
 * `_build.sh`
 * `_deploy.sh`
+* `DESCRIPTION`
 
 See the templates in the `BiocWorkshops2019` folder.
-
-_Note_. A `DESCRIPTION` file with your dependencies listed is also required.
 

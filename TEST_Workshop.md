@@ -36,6 +36,10 @@ the current directory in the branch:
 ```
 git checkout --orphan gh-pages
 git rm -rf .
+
+# create a hidden file .nojekyll
+touch .nojekyll
+git add .nojekyll
 ```
 
 Then commit the branch to GitHub:

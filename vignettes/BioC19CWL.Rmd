@@ -58,7 +58,172 @@ knitr::opts_chunk$set(
 
 ## Introduction to CWL
 
-## Turning your script into a command line tool
+Biomedical data analysis workflows created using ad hoc methods are not easily sharable or reproducible, which can result in inconsistencies when attempting to replicate scientific results and publications or perform collaborative analyses. 
+
+<center>
+
+![](images/nocwl1.png)
+</center>
+
+To overcome these challenges, the bioinformatics community is embracing the use of software containers such as Docker and workflow description languages for easier documentation and replication of analysis pipelines.
+
+Software containers enable easy packaging and sharing of command line tools and bioinformatics applications. Docker containers simplified how we share software, because they neatly package binaries and libraries together with their apps, and run them in a virtual environment directly on top of the host OS. That makes them much smaller, more portable and less computationally intense than virtural machines. However, containers do not come with instructions on how to execute these applications in a fashion that is human and machine-readable, enabling automation, scaling and reproducibility. 
+
+The Common Workflow Language (CWL), established in 2014, is a community-developed and widely adopted specification for describing containerized tools and workflows with plain text documents in a way that facilitates all the things we mentioned above. Applications described with Docker images and CWL will run consistently, in the way you intend, on everything from your local computer, your HPC, to your cloud infrastructure and various cloud platforms.
+
+<center>
+
+![](images/yescwl1.png)
+</center>
+
+CWL can be written in easily readable and parsable YAML, or a bit less readable, but just as parsable JSON - or a combination of both! It allows for extensions and tooling that facilitate code development, testing, and execution. One such set of tools is the Rabix project from Seven Bridges (Rabix.io), an open-source project that enables rapid composition and execution of CWL workflows in a manner that is scalable and reproducible.
+
+Included in CWL tool or workflow description:
+
+* CWL version
+* All commands necessary to run tool(s)
+* References to containers containing the tools with all dependencies
+
+```
+cwlVersion: v1.0
+class: CommandLineTool
+baseCommand: echo
+inputs:
+  message:
+    type: string
+    inputBinding:
+      position: 1
+outputs: []
+```
+
+CWL requires executors or workflow engines to interpret and execute.
+
+## Usecase
+
+Perhaps you are a researcher analyzing a dataset using Bioconductor tools and are planning to share your methods and findings with the world. You want your analysis to be reproducible so that once it's published, anyone with the access to the input data can repeat everything you've done and produce exactly the same outputs.
+
+To illustrate, we will be using a short DESeq2-based script as an example:
+
+```{r deseq2 script, eval=FALSE}
+library(DESeq2)
+library(pasilla)
+library(ReportingTools)
+
+directory <- system.file("extdata", package="pasilla", mustWork=TRUE)
+sampleFiles <- grep("treated", list.files(directory), value=TRUE)
+phenoCSV = read.csv(file.path(directory, "pasilla_sample_annotation.csv"))
+designFormula <- "~type + condition"
+
+sampleTable <- data.frame(fileName = sampleFiles, 
+                          filePath = file.path(directory, sampleFiles), 
+                          stringsAsFactors = FALSE)
+
+ind <- match(phenoCSV[,1], tools::file_path_sans_ext(sampleTable$fileName))
+sampleTable <- sampleTable[ind, , drop = FALSE]
+sampleTable <- cbind(sampleTable, phenoCSV)
+sampleTable <- sampleTable[complete.cases(sampleTable),]
+fctr <- trimws(tail(strsplit(designFormula, "\\+")[[1]], n=1))
+
+dds <- DESeqDataSetFromHTSeqCount(sampleTable = sampleTable,
+                                  directory = "",
+                                  design =  as.formula(designFormula))
+
+dds <- DESeq(dds)
+
+des2Report <- HTMLReport(shortName = 'DESeq2_analysis',
+                         title = 'DESeq2 DE analysis on pasilla data',
+                         reportDirectory = "./reports")
+
+publish(dds, des2Report, pvalueCutoff = 0.05,
+        factor = colData(dds)[,fctr],
+        reportDir="./reports")
+
+finish(des2Report)
+```
+
+In the example above, the input files used come from the [pasilla package](http://bioconductor.org/packages/release/data/experiment/html/pasilla.html). If there is a chance you or someone else will be running a similar analysis in the future, then it may be a good idea to limit the “hard-coding” of inputs and parameters and instead provide them at runtime via command-line arguments.
+
+## The command-line interface
+
+The first thing one needs to do in order to wrap his R/Bioconductor script into a neat portable CWL package is define the command-line interface. This can be done easily by using the R implementation of [docopt](http://docopt.org/). With docopt, by providing your script with a help message, you are at the same time defining its command line interface.
+
+See the re-worked script below:
+
+```{r docopt, eval=FALSE}
+'Docopt example
+
+Usage: 
+    exscrDoc.R --counts <file>... --phenodata <file> --factor <string> [--control <string>...]
+    
+Options:
+    
+    --counts <file>     Gene counts, one file per sample.
+    --phenodata <file>  Phenotype data in CSV format.
+    --factor <string>   Covariate of interest.
+    --control <string>  Optional parameters representing names of potential 
+                        confounders To be included in the design formula. 
+                        Must correspond to column names in the pheno data CSV.
+' -> doc
+
+library(docopt)
+opts <- docopt(doc)
+
+library(DESeq2)
+library(pasilla)
+library(ReportingTools)
+
+directory <- ""
+
+sampleFiles <- opts$counts
+phenoCSV = read.csv(opts$phenodata)
+
+
+designFormula <- paste0("~",paste(c(opts$control, opts$factor), collapse = '+'))
+
+sampleTable <- data.frame(fileName = basename(sampleFiles), 
+                          filePath = sampleFiles, 
+                          stringsAsFactors = FALSE)
+
+ind <- match(phenoCSV[,1], tools::file_path_sans_ext(sampleTable$fileName))
+sampleTable <- sampleTable[ind, , drop = FALSE]
+sampleTable <- cbind(sampleTable, phenoCSV)
+sampleTable <- sampleTable[complete.cases(sampleTable),]
+
+dds <- DESeqDataSetFromHTSeqCount(sampleTable = sampleTable,
+                                  directory = directory,
+                                  design =  as.formula(designFormula))
+
+dds <- DESeq(dds)
+
+des2Report <- HTMLReport(shortName = 'DESeq2_analysis',
+                         title = 'DESeq2 DE analysis on pasilla data',
+                         reportDirectory = "./reports")
+
+publish(dds, des2Report, pvalueCutoff = 0.05,
+        factor = colData(dds)[,opts$factor],
+        reportDir="./reports")
+
+finish(des2Report)
+```
+
+Now the script can be executed from the command line like this:
+
+```{r, engine='bash', eval=FALSE}
+Rscript exscrDoc.R --counts /Library/Frameworks/R.framework/Versions/3.5/Resources/library/pasilla/extdata/treated1fb.txt --counts /Library/Frameworks/R.framework/Versions/3.5/Resources/library/pasilla/extdata/treated2fb.txt --counts /Library/Frameworks/R.framework/Versions/3.5/Resources/library/pasilla/extdata/treated3fb.txt --counts /Library/Frameworks/R.framework/Versions/3.5/Resources/library/pasilla/extdata/untreated1fb.txt --counts /Library/Frameworks/R.framework/Versions/3.5/Resources/library/pasilla/extdata/untreated2fb.txt --counts /Library/Frameworks/R.framework/Versions/3.5/Resources/library/pasilla/extdata/untreated3fb.txt --counts /Library/Frameworks/R.framework/Versions/3.5/Resources/library/pasilla/extdata/untreated4fb.txt --phenodata /Library/Frameworks/R.framework/Versions/3.5/Resources/library/pasilla/extdata/pasilla_sample_annotation.csv --factor condition --control type
+```
+
+## Dockerizing
+
+```{}
+FROM bioconductor/release_base2:R3.6.0_Bioc3.9
+
+# installing required R packages
+RUN R -e 'BiocManager::install("DESeq2")'
+RUN R -e 'BiocManager::install("ReportingTools")'
+
+COPY Dockerfile /opt/
+
+```
 
 ## Rcwl
 ### Introduction to Rcwl

@@ -525,6 +525,8 @@ app <- cwlShiny(mulEcho, inputList, upload = TRUE)
 runApp(app)
 ```
 
+![shinyApp](images/cwlShiny.png) 
+
 ## Wrap R command-line tool
 
 Let's wrap the previous "exscrDoc.R" with `Rcwl`.
@@ -544,16 +546,20 @@ DE <- cwlParam(baseCommand = c("Rscript", rtool),
 ```
 
 To test the tool using data from the "pasilla" package.
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 DE$counts <- list.files(system.file("extdata", package = "pasilla"),
                         "treat", full.names = TRUE)
 DE$phenodata <- system.file("extdata/pasilla_sample_annotation.csv",
                             package = "pasilla")
 DE$factor <- "condition"
 DE$control <- "type"
-system(paste0("export R_LIBS_USER=", Sys.getenv("R_LIBS_USER")))
-DEres <- runCWL(DE, outdir = tempdir(), stderr="",
-                Args = "--preserve-entire-environment")
+DEres <- runCWL(DE, outdir = tempdir())
+```
+
+Here are the command and results:
+```{r}
+head(DEres$command, n=22)
+head(DEres$output)
 ```
 
 ## Build a simple DNASeq pipeline
@@ -570,7 +576,7 @@ tools
 ```
 
 The full paths can be pulled from the "fpath" column.
-```{r}
+```{r, messange=FALSE}
 library(dplyr)
 bfcinfo(tools) %>% select(rname, fpath)
 ```

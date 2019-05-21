@@ -4,7 +4,8 @@ date: "`r Sys.Date()`"
 output:
   BiocStyle::html_document:
     number_sections: yes
-    toc: true
+    toc_float: true
+    code_folding: show
 vignette: >
   %\VignetteIndexEntry{test}
   %\VignetteEngine{knitr::rmarkdown}
@@ -18,21 +19,56 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Instructors
+# Instructors and contact information
+* [Marko Zecevic](https://github.com/markozecevic) (marko.zecevic@sbgenomics.com)
+* [Daniela Cassol](https://github.com/dcassol) (danielac@ucr.edu) 
+* [Qiang Hu](https://github.com/hubentu) (Qiang.Hu@roswellpark.org)
 
 # Workshop Description
+<!--
+Put together some phrases. Need to describe better
+-->
+This workshop introduces how to use Common Workflow Language (CWL) in different perspectives. The *Rcwl* and *RcwlPipelines* packages which is built on top of the Common Workflow Language (CWL), it will provide a simple and easy way to wrap command line tools and build data analysis pipelines in R using CWL. Also, *systemPipeR* will demonstrate how workflows can be run from a single specification instance either entirely from within R, from various command-line wrappers (e.g., cwl-runner) or from other languages (e.g., Bash or Python). We will present a guide and best practices for creating container images (Docker) out of your R scripts, wrapping them in the *CWL* and then sharing them with the wider world.
 
 ## Pre-requisites
+- Basic knowledge of R and usage of Bioconductor packages for NGS analysis
+- Basic knowledge of running command-line software
+- No prior experience with CWL is necessary!
 
 ## Workshop Participation
+Participants will be able to perform all analysis components of this workshop hands-on. Active user participation throughout the event is highly encouraged including but not limited to lecture material, hands-on sections and final discussion. 
 
 ## _R_ / _Bioconductor_ packages used
+* [`docopt`](https://github.com/docopt/docopt.R)
+* [`sevenbridges`](https://bioconductor.org/packages/release/bioc/html/sevenbridges.html)
+* [`Rcwl`](https://bioconductor.org/packages/release/bioc/html/Rcwl.html)
+* [`RcwlPipelines`](https://bioconductor.org/packages/release/bioc/html/RcwlPipelines.html)
+* [`systemPipeR`](http://www.bioconductor.org/packages/release/bioc/html/systemPipeR.html)
+* [`systemPipeRdata`](http://www.bioconductor.org/packages/release/data/experiment/html/systemPipeRdata.html)
 
-* docopt
-* sevenbridges
-* Rcwl
-* RcwlPipelines
-* systemPipeR
+### Installation
+
+#### System dependencies
+
+#### R Packages
+The [Bioconductor](http://www.bioconductor.org/) R Packages can be installed from the R console using the [_`BiocManager::install`_](https://cran.r-project.org/web/packages/BiocManager/index.html) command. The associated package for this Workshop [_`BioC19CWL`_](https://github.com/hubentu/BioC19CWL) can be installed directly from GitHub, as demonstrated below. The latter provide the samples demo data and all the parameter files required to test and run these examples quickly.
+
+```{r install, eval=FALSE}
+if (!requireNamespace("BiocManager", quietly=TRUE)) install.packages("BiocManager")
+BiocManager::install(c("systemPipeR", "systemPipeRdata", "Rcwl", "RcwlPipelines"))
+```
+
+##### Loading packages 
+
+```{r packages, eval=TRUE}
+# Loads the packages
+suppressPackageStartupMessages({
+library(systemPipeR)
+library(systemPipeRdata)
+library(Rcwl)
+library(RcwlPipelines)
+})
+```
 
 ## Time outline
 | Activity                                     | Instructor     | Time |
@@ -47,17 +83,17 @@ knitr::opts_chunk$set(
 # Workshop goals and objectives
 
 ## Learning goals
-
-* ...
+* Integration of command-line tools via the CWL community standard
+* Design of CWL workflows
 * Understand how to wrap tools with `Rcwl`
 * Practice to build pipeline
 * ...
 
 ## Learning objectives
-
-* ...
+* How to make analysis workflows more robust, reproducible and portable across heterogeneous computing systems
 * Create a basic `echo` tool
 * Build a simple DNASeq alignment pipeline
+* Usage of new CWL S4 class in *systemPipeR*
 * ...
 
 # Introduction to CWL

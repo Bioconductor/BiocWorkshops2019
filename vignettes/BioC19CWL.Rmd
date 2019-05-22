@@ -531,7 +531,8 @@ runApp(app)
 
 Let's wrap the previous "exscrDoc.R" with `Rcwl`.
 ```{r}
-rtool <- normalizePath("exscrDoc.R")
+sysdir <- system.file(package="BioC19CWL")
+rtool <- file.path(sysdir, "testdata/exscrDoc.R")
 p1 <- InputParam(id = "counts",
                  type = InputArrayParam(items = "File",
                                         prefix = "--counts"))
@@ -665,8 +666,8 @@ Let's run the pipeline.
 ```{r, eval=FALSE}
 library(BiocParallel)
 ids <- c("normal", "tumor")
-fq1 <- list.files("testdata", "1.fq.gz", full.names = TRUE)
-fq2 <- list.files("testdata", "2.fq.gz", full.names = TRUE)
+fq1 <- list.files(file.path(sysdir, "testdata"), "1.fq.gz", full.names = TRUE)
+fq2 <- list.files(file.path(sysdir, "testdata"), "2.fq.gz", full.names = TRUE)
 fq1 <- as.list(fq1)
 fq2 <- as.list(fq2)
 rg <- as.list(paste("@RG",
@@ -678,7 +679,7 @@ inputList <- list(RG = rg,
                   FQ1 = fq1,
                   FQ2 = fq2)
 paramList <- list(threads = 2,
-                  Ref = "testdata/ref.fa")
+                  Ref = file.path(sysdir, "testdata/ref.fa"))
 
 result <- runCWLBatch(cwl = Align, outdir = tempdir(), inputList,
                       paramList, BPPARAM = MulticoreParam(2),

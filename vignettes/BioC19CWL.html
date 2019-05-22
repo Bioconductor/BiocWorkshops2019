@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2019-05-21" />
+<meta name="date" content="2019-05-22" />
 
 <title>Combined CWL workshop</title>
 
@@ -307,7 +307,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Combined CWL workshop</h1>
-<h4 class="date">2019-05-21</h4>
+<h4 class="date">2019-05-22</h4>
 
 </div>
 
@@ -642,31 +642,33 @@ r1
 #&gt; names(3): command output logs</code></pre>
 <p>Here we can check the output to ensure the code did what we expected.</p>
 <pre class="r"><code>r1$output
-#&gt; [1] &quot;/tmp/Rtmp2RVoxJ/0cca5b5d40a36954ce928cecff9cad9fbeb7a777&quot;
+#&gt; [1] &quot;/tmp/Rtmp34rANm/9a0a7964233c4459f41bac73b20581320e8d68c7&quot;
 readLines(r1$output)
 #&gt; [1] &quot;Hello World!&quot;</code></pre>
 <p>The executed command was returned in the result list. It shows the command that we defined to run.</p>
 <pre class="r"><code>r1$command
-#&gt; [1] &quot;[job file5b5f6fe40fac.cwl] /tmp/tmpzze8Lq$ echo \\&quot;                          
-#&gt; [2] &quot;    'Hello World!' &gt; /tmp/tmpzze8Lq/0cca5b5d40a36954ce928cecff9cad9fbeb7a777&quot;</code></pre>
+#&gt; [1] &quot;[job file1b59382b1f57.cwl] /tmp/jB9LBw$ echo \\&quot;                          
+#&gt; [2] &quot;    'Hello World!' &gt; /tmp/jB9LBw/9a0a7964233c4459f41bac73b20581320e8d68c7&quot;
+#&gt; [3] &quot;Could not collect memory usage, job ended before monitoring began.&quot;</code></pre>
 <p>The log shows the details of how the <code>cwltool</code> works with CWL scripts.</p>
 <pre class="r"><code>r1$log
-#&gt;  [1] &quot;/usr/bin/cwltool 1.0.20180302231433&quot;                                                             
-#&gt;  [2] &quot;Resolved '/tmp/Rtmp2RVoxJ/file5b5f6fe40fac.cwl' to 'file:///tmp/Rtmp2RVoxJ/file5b5f6fe40fac.cwl'&quot;
-#&gt;  [3] &quot;[job file5b5f6fe40fac.cwl] /tmp/tmpzze8Lq$ echo \\&quot;                                              
-#&gt;  [4] &quot;    'Hello World!' &gt; /tmp/tmpzze8Lq/0cca5b5d40a36954ce928cecff9cad9fbeb7a777&quot;                    
-#&gt;  [5] &quot;[job file5b5f6fe40fac.cwl] completed success&quot;                                                    
-#&gt;  [6] &quot;{&quot;                                                                                               
-#&gt;  [7] &quot;    \&quot;output\&quot;: {&quot;                                                                               
-#&gt;  [8] &quot;        \&quot;checksum\&quot;: \&quot;sha1$a0b65939670bc2c010f4d5d6a0b3e4e4590fb92b\&quot;, &quot;                       
-#&gt;  [9] &quot;        \&quot;basename\&quot;: \&quot;0cca5b5d40a36954ce928cecff9cad9fbeb7a777\&quot;, &quot;                            
-#&gt; [10] &quot;        \&quot;location\&quot;: \&quot;file:///tmp/Rtmp2RVoxJ/0cca5b5d40a36954ce928cecff9cad9fbeb7a777\&quot;, &quot;     
-#&gt; [11] &quot;        \&quot;path\&quot;: \&quot;/tmp/Rtmp2RVoxJ/0cca5b5d40a36954ce928cecff9cad9fbeb7a777\&quot;, &quot;                
-#&gt; [12] &quot;        \&quot;class\&quot;: \&quot;File\&quot;, &quot;                                                                   
-#&gt; [13] &quot;        \&quot;size\&quot;: 13&quot;                                                                            
-#&gt; [14] &quot;    }&quot;                                                                                           
-#&gt; [15] &quot;}&quot;                                                                                               
-#&gt; [16] &quot;Final process status is success&quot;</code></pre>
+#&gt;  [1] &quot;/home/qiang/.local/bin/cwltool 1.0.20190228155703&quot;                                               
+#&gt;  [2] &quot;Resolved '/tmp/Rtmp34rANm/file1b59382b1f57.cwl' to 'file:///tmp/Rtmp34rANm/file1b59382b1f57.cwl'&quot;
+#&gt;  [3] &quot;[job file1b59382b1f57.cwl] /tmp/jB9LBw$ echo \\&quot;                                                 
+#&gt;  [4] &quot;    'Hello World!' &gt; /tmp/jB9LBw/9a0a7964233c4459f41bac73b20581320e8d68c7&quot;                       
+#&gt;  [5] &quot;Could not collect memory usage, job ended before monitoring began.&quot;                              
+#&gt;  [6] &quot;[job file1b59382b1f57.cwl] completed success&quot;                                                    
+#&gt;  [7] &quot;{&quot;                                                                                               
+#&gt;  [8] &quot;    \&quot;output\&quot;: {&quot;                                                                               
+#&gt;  [9] &quot;        \&quot;checksum\&quot;: \&quot;sha1$a0b65939670bc2c010f4d5d6a0b3e4e4590fb92b\&quot;, &quot;                       
+#&gt; [10] &quot;        \&quot;basename\&quot;: \&quot;9a0a7964233c4459f41bac73b20581320e8d68c7\&quot;, &quot;                            
+#&gt; [11] &quot;        \&quot;location\&quot;: \&quot;file:///tmp/Rtmp34rANm/9a0a7964233c4459f41bac73b20581320e8d68c7\&quot;, &quot;     
+#&gt; [12] &quot;        \&quot;path\&quot;: \&quot;/tmp/Rtmp34rANm/9a0a7964233c4459f41bac73b20581320e8d68c7\&quot;, &quot;                
+#&gt; [13] &quot;        \&quot;class\&quot;: \&quot;File\&quot;, &quot;                                                                   
+#&gt; [14] &quot;        \&quot;size\&quot;: 13&quot;                                                                            
+#&gt; [15] &quot;    }&quot;                                                                                           
+#&gt; [16] &quot;}&quot;                                                                                               
+#&gt; [17] &quot;Final process status is success&quot;</code></pre>
 <p>The <code>runCWL</code> generated two scripts with the default <code>tempfile</code> prefix, the tool wrapper CWL file and the input YML file. The <code>cwltool</code> parse the two scripts and translate them to the command shown before. The output is not defined in the <code>cwlParam</code> object, so the command output was returned to <strong>stdout</strong> by default.</p>
 </div>
 </div>
@@ -697,13 +699,14 @@ echoA$file &lt;- tmpfile
 r2 &lt;- runCWL(echoA, outdir = tempdir())
 #&gt; Final process status is success
 r2$command
-#&gt; [1] &quot;[job file5b5f1699bb49.cwl] /tmp/tmpDlkPQV$ echo \\&quot;                                   
-#&gt; [2] &quot;    --file=/tmp/tmpVJf1T4/stg8bb07fb7-7377-4148-8b3c-860bfb6e1861/file5b5f688c398d \\&quot;
+#&gt; [1] &quot;[job file1b59768a8197.cwl] /tmp/PT5FGJ$ echo \\&quot;                                      
+#&gt; [2] &quot;    --file=/tmp/tmpmAvgTV/stga539f25c-80cc-4d88-a88a-d97864ceee88/file1b5921a12895 \\&quot;
 #&gt; [3] &quot;    -f \\&quot;                                                                            
 #&gt; [4] &quot;    -i \\&quot;                                                                            
 #&gt; [5] &quot;    1 \\&quot;                                                                             
 #&gt; [6] &quot;    -s \\&quot;                                                                            
-#&gt; [7] &quot;    Hello &gt; /tmp/tmpDlkPQV/output.txt&quot;</code></pre>
+#&gt; [7] &quot;    Hello &gt; /tmp/PT5FGJ/output.txt&quot;                                                   
+#&gt; [8] &quot;Could not collect memory usage, job ended before monitoring began.&quot;</code></pre>
 <ol start="2" style="list-style-type: decimal">
 <li>Array Inputs A similar example to CWL user guide. We can define three different type of array as inputs.</li>
 </ol>
@@ -737,15 +740,16 @@ echoB
 <pre class="r"><code>r3 &lt;- runCWL(echoB, outdir = tempdir())
 #&gt; Final process status is success
 r3$command
-#&gt; [1] &quot;[job file5b5f6a049e46.cwl] /tmp/tmpWBw9Yp$ echo \\&quot;                    
-#&gt; [2] &quot;    -A \\&quot;                                                             
-#&gt; [3] &quot;    a \\&quot;                                                              
-#&gt; [4] &quot;    b \\&quot;                                                              
-#&gt; [5] &quot;    c \\&quot;                                                              
-#&gt; [6] &quot;    -B=d \\&quot;                                                           
-#&gt; [7] &quot;    -B=e \\&quot;                                                           
-#&gt; [8] &quot;    -B=f \\&quot;                                                           
-#&gt; [9] &quot;    -C=g,h,i &gt; /tmp/tmpWBw9Yp/8b13a1d6d050ec2691810a611ac9ffa4b16052be&quot;</code></pre>
+#&gt;  [1] &quot;[job file1b591ea05bf3.cwl] /tmp/95WLRp$ echo \\&quot;                    
+#&gt;  [2] &quot;    -A \\&quot;                                                          
+#&gt;  [3] &quot;    a \\&quot;                                                           
+#&gt;  [4] &quot;    b \\&quot;                                                           
+#&gt;  [5] &quot;    c \\&quot;                                                           
+#&gt;  [6] &quot;    -B=d \\&quot;                                                        
+#&gt;  [7] &quot;    -B=e \\&quot;                                                        
+#&gt;  [8] &quot;    -B=f \\&quot;                                                        
+#&gt;  [9] &quot;    -C=g,h,i &gt; /tmp/95WLRp/2e00f0b839b016990843a4344fe4ec476183c833&quot;
+#&gt; [10] &quot;Could not collect memory usage, job ended before monitoring began.&quot;</code></pre>
 </div>
 <div id="output-parameters" class="section level3">
 <h3><span class="header-section-number">5.3.2</span> Output Parameters</h3>
@@ -774,7 +778,7 @@ gz$zfile &lt;- zzfil
 r4 &lt;- runCWL(gz, outdir = tempdir())
 #&gt; Final process status is success
 r4$output
-#&gt; [1] &quot;/tmp/Rtmp2RVoxJ/sample.R&quot;</code></pre>
+#&gt; [1] &quot;/tmp/Rtmp34rANm/sample.R&quot;</code></pre>
 <p>Or we can use <code>arguments</code> to set some default parameters.</p>
 <pre class="r"><code>z1 &lt;- InputParam(id = &quot;zfile&quot;, type = &quot;File&quot;)
 o1 &lt;- OutputParam(id = &quot;rfile&quot;, type = &quot;File&quot;, glob = ofile)
@@ -824,7 +828,7 @@ touch$a &lt;- c(&quot;a.txt&quot;, &quot;b.gz&quot;, &quot;c.txt&quot;)
 r5 &lt;- runCWL(touch, outdir = tempdir())
 #&gt; Final process status is success
 r5$output
-#&gt; [1] &quot;/tmp/Rtmp2RVoxJ/a.txt&quot; &quot;/tmp/Rtmp2RVoxJ/c.txt&quot;</code></pre>
+#&gt; [1] &quot;/tmp/Rtmp34rANm/a.txt&quot; &quot;/tmp/Rtmp34rANm/c.txt&quot;</code></pre>
 </div>
 </div>
 <div id="run-approaches" class="section level2">
@@ -890,7 +894,8 @@ runApp(app)</code></pre>
 <div id="wrap-r-command-line-tool" class="section level2">
 <h2><span class="header-section-number">5.5</span> Wrap R command-line tool</h2>
 <p>Let’s wrap the previous “exscrDoc.R” with <code>Rcwl</code>.</p>
-<pre class="r"><code>rtool &lt;- normalizePath(&quot;exscrDoc.R&quot;)
+<pre class="r"><code>sysdir &lt;- system.file(package=&quot;BioC19CWL&quot;)
+rtool &lt;- file.path(sysdir, &quot;testdata/exscrDoc.R&quot;)
 p1 &lt;- InputParam(id = &quot;counts&quot;,
                  type = InputArrayParam(items = &quot;File&quot;,
                                         prefix = &quot;--counts&quot;))
@@ -913,35 +918,35 @@ DEres &lt;- runCWL(DE, outdir = tempdir())
 #&gt; Final process status is success</code></pre>
 <p>Here are the command and results:</p>
 <pre class="r"><code>head(DEres$command, n=22)
-#&gt;  [1] &quot;[job file5b5f5f6845c.cwl] /tmp/tmphHU8lw$ Rscript \\&quot;                                    
-#&gt;  [2] &quot;    /media/qiang/data/Projects/BioC19CWL/vignettes/exscrDoc.R \\&quot;                        
+#&gt;  [1] &quot;[job file1b59659024ff.cwl] /tmp/qq5D20$ Rscript \\&quot;                                      
+#&gt;  [2] &quot;    /media/qiang/data/Projects/BioC19CWL/inst/testdata/exscrDoc.R \\&quot;                    
 #&gt;  [3] &quot;    --control \\&quot;                                                                        
 #&gt;  [4] &quot;    type \\&quot;                                                                             
 #&gt;  [5] &quot;    --counts \\&quot;                                                                         
-#&gt;  [6] &quot;    /tmp/tmpYAzuuC/stgc6a07186-d855-43f3-a534-995442b57ae7/treated1fb.txt \\&quot;            
+#&gt;  [6] &quot;    /tmp/tmpbZ0zXo/stg28c38d38-c9b3-46e5-8298-51f5a3e81b3c/treated1fb.txt \\&quot;            
 #&gt;  [7] &quot;    --counts \\&quot;                                                                         
-#&gt;  [8] &quot;    /tmp/tmpYAzuuC/stg0969a357-69d3-4fbb-a417-0dc251875f66/treated2fb.txt \\&quot;            
+#&gt;  [8] &quot;    /tmp/tmpbZ0zXo/stg000746a0-9069-4424-a80b-84cf3863b161/treated2fb.txt \\&quot;            
 #&gt;  [9] &quot;    --counts \\&quot;                                                                         
-#&gt; [10] &quot;    /tmp/tmpYAzuuC/stgab186aa0-8ef5-43b7-8a94-11c7a8e9705b/treated3fb.txt \\&quot;            
+#&gt; [10] &quot;    /tmp/tmpbZ0zXo/stg116ce134-65f7-43f5-9366-0eac39340fdf/treated3fb.txt \\&quot;            
 #&gt; [11] &quot;    --counts \\&quot;                                                                         
-#&gt; [12] &quot;    /tmp/tmpYAzuuC/stg436c1c61-0551-48b2-8bd1-4d073d836c97/untreated1fb.txt \\&quot;          
+#&gt; [12] &quot;    /tmp/tmpbZ0zXo/stg07a799ce-9a8b-4956-b752-33206aeb58e9/untreated1fb.txt \\&quot;          
 #&gt; [13] &quot;    --counts \\&quot;                                                                         
-#&gt; [14] &quot;    /tmp/tmpYAzuuC/stg9b366a86-0a83-4b4e-bc5a-a8ea32eb05fa/untreated2fb.txt \\&quot;          
+#&gt; [14] &quot;    /tmp/tmpbZ0zXo/stg8c0f7ecf-72a2-44bd-8f0c-7b31242a6596/untreated2fb.txt \\&quot;          
 #&gt; [15] &quot;    --counts \\&quot;                                                                         
-#&gt; [16] &quot;    /tmp/tmpYAzuuC/stg23b2c875-8c1c-46f8-a125-503227d2139a/untreated3fb.txt \\&quot;          
+#&gt; [16] &quot;    /tmp/tmpbZ0zXo/stg3b0dc8ec-d1c3-409c-8c45-b395765f34b7/untreated3fb.txt \\&quot;          
 #&gt; [17] &quot;    --counts \\&quot;                                                                         
-#&gt; [18] &quot;    /tmp/tmpYAzuuC/stg41f60f65-906f-4c0d-8cae-5fb7b2cbb460/untreated4fb.txt \\&quot;          
+#&gt; [18] &quot;    /tmp/tmpbZ0zXo/stg4894f281-488a-4e12-89a9-4fbd09ba9256/untreated4fb.txt \\&quot;          
 #&gt; [19] &quot;    --factor \\&quot;                                                                         
 #&gt; [20] &quot;    condition \\&quot;                                                                        
 #&gt; [21] &quot;    --phenodata \\&quot;                                                                      
-#&gt; [22] &quot;    /tmp/tmpYAzuuC/stg8f56aca7-a8f0-4417-94f0-fa27a56bfcb1/pasilla_sample_annotation.csv&quot;
+#&gt; [22] &quot;    /tmp/tmpbZ0zXo/stgdd2400f2-607d-4ec2-894a-f43f1dad7b24/pasilla_sample_annotation.csv&quot;
 head(DEres$output)
-#&gt; [1] &quot;/tmp/Rtmp2RVoxJ/reports/DESeq2_analysis.html&quot;                              
-#&gt; [2] &quot;/tmp/Rtmp2RVoxJ/reports/figuresDESeq2_analysis&quot;                            
-#&gt; [3] &quot;/tmp/Rtmp2RVoxJ/reports/figuresDESeq2_analysis/boxplot.FBgn0039209:005.pdf&quot;
-#&gt; [4] &quot;/tmp/Rtmp2RVoxJ/reports/figuresDESeq2_analysis/boxplot.FBgn0013548:002.pdf&quot;
-#&gt; [5] &quot;/tmp/Rtmp2RVoxJ/reports/figuresDESeq2_analysis/boxplot.FBgn0002921:015.pdf&quot;
-#&gt; [6] &quot;/tmp/Rtmp2RVoxJ/reports/figuresDESeq2_analysis/mini.FBgn0050069:005.png&quot;</code></pre>
+#&gt; [1] &quot;/tmp/Rtmp34rANm/reports&quot;                                                   
+#&gt; [2] &quot;/tmp/Rtmp34rANm/reports/DESeq2_analysis.html&quot;                              
+#&gt; [3] &quot;/tmp/Rtmp34rANm/reports/figuresDESeq2_analysis&quot;                            
+#&gt; [4] &quot;/tmp/Rtmp34rANm/reports/figuresDESeq2_analysis/boxplot.FBgn0039209:005.pdf&quot;
+#&gt; [5] &quot;/tmp/Rtmp34rANm/reports/figuresDESeq2_analysis/boxplot.FBgn0013548:002.pdf&quot;
+#&gt; [6] &quot;/tmp/Rtmp34rANm/reports/figuresDESeq2_analysis/boxplot.FBgn0002921:015.pdf&quot;</code></pre>
 </div>
 <div id="build-a-simple-dnaseq-pipeline" class="section level2">
 <h2><span class="header-section-number">5.6</span> Build a simple DNASeq pipeline</h2>
@@ -951,11 +956,55 @@ head(DEres$output)
 <pre class="r"><code>tools &lt;- cwlTools(cachePath = tempdir())
 tools
 #&gt; class: BiocFileCache
-#&gt; bfccache: /tmp/Rtmp2RVoxJ
+#&gt; bfccache: /tmp/Rtmp34rANm
 #&gt; bfccount: 36
 #&gt; For more information see: bfcinfo() or bfcquery()</code></pre>
 <p>The full paths can be pulled from the “fpath” column.</p>
 <pre class="r"><code>library(dplyr)
+#&gt; 
+#&gt; Attaching package: 'dplyr'
+#&gt; The following objects are masked from 'package:dbplyr':
+#&gt; 
+#&gt;     ident, sql
+#&gt; The following object is masked from 'package:ShortRead':
+#&gt; 
+#&gt;     id
+#&gt; The following objects are masked from 'package:GenomicAlignments':
+#&gt; 
+#&gt;     first, last
+#&gt; The following object is masked from 'package:matrixStats':
+#&gt; 
+#&gt;     count
+#&gt; The following object is masked from 'package:Biobase':
+#&gt; 
+#&gt;     combine
+#&gt; The following objects are masked from 'package:Biostrings':
+#&gt; 
+#&gt;     collapse, intersect, setdiff, setequal, union
+#&gt; The following object is masked from 'package:XVector':
+#&gt; 
+#&gt;     slice
+#&gt; The following objects are masked from 'package:GenomicRanges':
+#&gt; 
+#&gt;     intersect, setdiff, union
+#&gt; The following object is masked from 'package:GenomeInfoDb':
+#&gt; 
+#&gt;     intersect
+#&gt; The following objects are masked from 'package:IRanges':
+#&gt; 
+#&gt;     collapse, desc, intersect, setdiff, slice, union
+#&gt; The following objects are masked from 'package:S4Vectors':
+#&gt; 
+#&gt;     first, intersect, rename, setdiff, setequal, union
+#&gt; The following objects are masked from 'package:BiocGenerics':
+#&gt; 
+#&gt;     combine, intersect, setdiff, union
+#&gt; The following objects are masked from 'package:stats':
+#&gt; 
+#&gt;     filter, lag
+#&gt; The following objects are masked from 'package:base':
+#&gt; 
+#&gt;     intersect, setdiff, setequal, union
 bfcinfo(tools) %&gt;% select(rname, fpath)
 #&gt; # A tibble: 36 x 2
 #&gt;    rname           fpath                                                     
@@ -1030,13 +1079,13 @@ Align &lt;- cwlStepParam(requirements = list(req1, req2),
 Align &lt;- Align + s1 + s2 + s3 + s4 + s5</code></pre>
 <p>The pipeline is ready for use. We can plot the pipeline with <code>plotCWL</code> from the <code>Rcwl</code> package.</p>
 <pre class="r"><code>plotCWL(Align)</code></pre>
-<div id="htmlwidget-e666aa1d51085a020d54" style="width:768px;height:480px;" class="DiagrammeR html-widget"></div>
-<script type="application/json" data-for="htmlwidget-e666aa1d51085a020d54">{"x":{"diagram":"graph TB\nA(threads)-->H{bwa}\nB(RG)-->H{bwa}\nC(Ref)-->H{bwa}\nD(FQ1)-->H{bwa}\nE(FQ2)-->H{bwa}\nH{bwa}-->|sam|I{sam2bam}\nI{sam2bam}-->|bam|J{sortBam}\nJ{sortBam}-->|sbam|K{markdup}\nK{markdup}-->F((Bam))\nF((Bam))-->L{idxBam}\nL{idxBam}-->G((Idx))"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-5927fe4a9319563af182" style="width:768px;height:480px;" class="DiagrammeR html-widget"></div>
+<script type="application/json" data-for="htmlwidget-5927fe4a9319563af182">{"x":{"diagram":"graph TB\nA(threads)-->H{bwa}\nB(RG)-->H{bwa}\nC(Ref)-->H{bwa}\nD(FQ1)-->H{bwa}\nE(FQ2)-->H{bwa}\nH{bwa}-->|sam|I{sam2bam}\nI{sam2bam}-->|bam|J{sortBam}\nJ{sortBam}-->|sbam|K{markdup}\nK{markdup}-->F((Bam))\nF((Bam))-->L{idxBam}\nL{idxBam}-->G((Idx))"},"evals":[],"jsHooks":[]}</script>
 <p>Let’s run the pipeline.</p>
 <pre class="r"><code>library(BiocParallel)
 ids &lt;- c(&quot;normal&quot;, &quot;tumor&quot;)
-fq1 &lt;- list.files(&quot;testdata&quot;, &quot;1.fq.gz&quot;, full.names = TRUE)
-fq2 &lt;- list.files(&quot;testdata&quot;, &quot;2.fq.gz&quot;, full.names = TRUE)
+fq1 &lt;- list.files(file.path(sysdir, &quot;testdata&quot;), &quot;1.fq.gz&quot;, full.names = TRUE)
+fq2 &lt;- list.files(file.path(sysdir, &quot;testdata&quot;), &quot;2.fq.gz&quot;, full.names = TRUE)
 fq1 &lt;- as.list(fq1)
 fq2 &lt;- as.list(fq2)
 rg &lt;- as.list(paste(&quot;@RG&quot;,
@@ -1048,7 +1097,7 @@ inputList &lt;- list(RG = rg,
                   FQ1 = fq1,
                   FQ2 = fq2)
 paramList &lt;- list(threads = 2,
-                  Ref = &quot;testdata/ref.fa&quot;)
+                  Ref = file.path(sysdir, &quot;testdata/ref.fa&quot;))
 
 result &lt;- runCWLBatch(cwl = Align, outdir = tempdir(), inputList,
                       paramList, BPPARAM = MulticoreParam(2),

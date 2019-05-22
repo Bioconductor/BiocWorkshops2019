@@ -1,34 +1,74 @@
 ---
 title: "Combined CWL workshop"
-output: rmarkdown::html_vignette
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    number_sections: yes
+    toc_float: true
+    code_folding: show
 vignette: >
   %\VignetteIndexEntry{test}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
----                       
+---
 
-```{r}
+```{r, echo=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 ```
 
-# Instructors
+# Instructors and contact information
+* [Marko Zecevic](https://github.com/markozecevic) (marko.zecevic@sbgenomics.com)
+* [Daniela Cassol](https://github.com/dcassol) (danielac@ucr.edu) 
+* [Qiang Hu](https://github.com/hubentu) (Qiang.Hu@roswellpark.org)
 
 # Workshop Description
+<!--
+Put together some phrases. Need to describe better
+-->
+This workshop introduces how to use Common Workflow Language (CWL) in different perspectives. The *Rcwl* and *RcwlPipelines* packages which is built on top of the Common Workflow Language (CWL), it will provide a simple and easy way to wrap command line tools and build data analysis pipelines in R using CWL. Also, *systemPipeR* will demonstrate how workflows can be run from a single specification instance either entirely from within R, from various command-line wrappers (e.g., cwl-runner) or from other languages (e.g., Bash or Python). We will present a guide and best practices for creating container images (Docker) out of your R scripts, wrapping them in the *CWL* and then sharing them with the wider world.
 
 ## Pre-requisites
+- Basic knowledge of R and usage of Bioconductor packages for NGS analysis
+- Basic knowledge of running command-line software
+- No prior experience with CWL is necessary!
 
 ## Workshop Participation
+Participants will be able to perform all analysis components of this workshop hands-on. Active user participation throughout the event is highly encouraged including but not limited to lecture material, hands-on sections and final discussion. 
 
 ## _R_ / _Bioconductor_ packages used
+* [`docopt`](https://github.com/docopt/docopt.R)
+* [`sevenbridges`](https://bioconductor.org/packages/release/bioc/html/sevenbridges.html)
+* [`Rcwl`](https://bioconductor.org/packages/release/bioc/html/Rcwl.html)
+* [`RcwlPipelines`](https://bioconductor.org/packages/release/bioc/html/RcwlPipelines.html)
+* [`systemPipeR`](http://www.bioconductor.org/packages/release/bioc/html/systemPipeR.html)
+* [`systemPipeRdata`](http://www.bioconductor.org/packages/release/data/experiment/html/systemPipeRdata.html)
 
-* docopt
-* sevenbridges
-* Rcwl
-* RcwlPipelines
-* systemPipeR
+### Installation
+
+#### System dependencies
+
+#### R Packages
+The [Bioconductor](http://www.bioconductor.org/) R Packages can be installed from the R console using the [_`BiocManager::install`_](https://cran.r-project.org/web/packages/BiocManager/index.html) command. The associated package for this Workshop [_`BioC19CWL`_](https://github.com/hubentu/BioC19CWL) can be installed directly from GitHub, as demonstrated below. The latter provide the samples demo data and all the parameter files required to test and run these examples quickly.
+
+```{r install, eval=FALSE}
+if (!requireNamespace("BiocManager", quietly=TRUE)) install.packages("BiocManager")
+BiocManager::install(c("systemPipeR", "systemPipeRdata", "Rcwl", "RcwlPipelines"))
+```
+
+##### Loading packages 
+
+```{r packages, eval=TRUE}
+# Loads the packages
+suppressPackageStartupMessages({
+library(systemPipeR)
+library(systemPipeRdata)
+library(Rcwl)
+library(RcwlPipelines)
+})
+```
 
 ## Time outline
 | Activity                                     | Instructor     | Time |
@@ -43,20 +83,20 @@ knitr::opts_chunk$set(
 # Workshop goals and objectives
 
 ## Learning goals
-
-* ...
+* Integration of command-line tools via the CWL community standard
+* Design of CWL workflows
 * Understand how to wrap tools with `Rcwl`
 * Practice to build pipeline
 * ...
 
 ## Learning objectives
-
-* ...
+* How to make analysis workflows more robust, reproducible and portable across heterogeneous computing systems
 * Create a basic `echo` tool
 * Build a simple DNASeq alignment pipeline
+* Usage of new CWL S4 class in *systemPipeR*
 * ...
 
-## Introduction to CWL
+# Introduction to CWL
 
 Biomedical data analysis workflows created using ad hoc methods are not easily sharable or reproducible, which can result in inconsistencies when attempting to replicate scientific results and publications or perform collaborative analyses. 
 
@@ -225,17 +265,18 @@ COPY Dockerfile /opt/
 
 ```
 
-## Rcwl
-### Introduction to Rcwl
-#### Rcwl setup
+# Rcwl
+## Introduction to Rcwl
+### Rcwl setup
 The `Rcwl` package is aimed to a simple and user-friendly way to manage command line tools and build data analysis pipelines in R using Common Workflow Language (CWL). The `Rcwl` and `RcwlPipelines` packages are available in Bioc 3.7 and R >= 3.6. You can install them by the `BiocManager` package.
 ```{r}
-BiocManager::install(c("Rcwl", "RcwlPipelines"))
+if (!requireNamespace("RcwlPipelines", quietly = TRUE))
+	BiocManager::install(c("Rcwl", "RcwlPipelines"))
 library(Rcwl)
 library(RcwlPipelines)
 ```
 
-#### System requirements
+### System requirements
 
 Besides the depedencies of the R packages, the following tools are required to be installed to run the .
 
@@ -251,8 +292,8 @@ Here you can find instruction to install these tools.
 * <https://nodejs.org>
 * <https://docs.docker.com/install>
 
-### First example
-#### Hello world
+## First example
+### Hello world
 The main class and constructor function is `cwlParam`, which wrap a command line tool and its parameters in a `cwlParam` object. Let's start with a simple example, `echo hello world`.
 
 First, we load the package and then define the input parameter for "echo", a string without a prefix. Just an `id` option required.
@@ -272,7 +313,7 @@ echo$sth <- "Hello World!"
 echo
 ```
 
-#### Test run
+### Test run
 The function `runCWL` is used to run the CWL object by invoking the python tool `cwltool`. The return will be a list including the command executed, temporary output and logs. The output directory is the current folder by default, but it can be changed by setting `outdir` option. All standard out and standard error stream can also be printed by setting `stderr = ""`.
 ```{r}
 r1 <- runCWL(echo, outdir = tempdir())
@@ -296,8 +337,8 @@ r1$log
 ```
 The `runCWL` generated two scripts with the default `tempfile` prefix, the tool wrapper CWL file and the input YML file. The `cwltool` parse the two scripts and translate them to the command shown before. The output is not defined in the `cwlParam` object, so the command output was returned to __stdout__ by default.
 
-### Components
-#### Input Parameters
+## Components
+### Input Parameters
 1. Essential Input parameters
 For the input parameters, three options need to be defined usually, *id*, *type*, and *prefix*. The type can be *string*, *int*, *long*, *float*, *double*, and so on. More detail can be found at: <https://www.commonwl.org/v1.0/CommandLineTool.html#CWLType>.
 
@@ -354,7 +395,7 @@ r3 <- runCWL(echoB, outdir = tempdir())
 r3$command
 ```
 
-#### Output Parameters
+### Output Parameters
 1. Capturing Output
 The outputs, similar to the inputs, is a list of output parameters. Three options *id*, *type* and *glob* can be defined. The glob option is used to define a pattern to find files relative to the output directory.
 
@@ -433,8 +474,8 @@ r5 <- runCWL(touch, outdir = tempdir())
 r5$output
 ```
 
-### Run approaches
-#### Running Tools in parallel
+## Run approaches
+### Running Tools in parallel
 
 The CWL also can work in high performance clusters with batch-queuing system, such as SGE, PBS, SLURM and so on, using the Bioconductor package `BiocParallel`. Here is an example to submit jobs with "Multiicore" and "SGE".
 
@@ -453,7 +494,7 @@ result2 <- runCWLBatch(cwl = echo, outdir = tempdir(), inputList = list(sth = st
                                                  resources = list(queue = "all.q")))
 ```
 
-#### Web Application
+### Web Application
 Here we build a tool with different types of input parameters.
 ```{r}
 e1 <- InputParam(id = "flag", type = "boolean",
@@ -484,8 +525,39 @@ app <- cwlShiny(mulEcho, inputList, upload = TRUE)
 runApp(app)
 ```
 
-### Build a simple DNASeq pipeline
-#### RcwlPipelines
+## Wrap R command-line tool
+
+Let's wrap the previous "exscrDoc.R" with `Rcwl`.
+```{r}
+rtool <- normalizePath("exscrDoc.R")
+p1 <- InputParam(id = "counts",
+                 type = InputArrayParam(items = "File",
+                                        prefix = "--counts"))
+p2 <- InputParam(id = "phenodata", type = "File",
+                 prefix = "--phenodata")
+p3 <- InputParam(id = "factor", type = "string", prefix = "--factor")
+p4 <- InputParam(id = "control", type = "string", prefix = "--control")
+o1 <- OutputParam(id = "outdir", type = "Directory", glob = "reports")
+DE <- cwlParam(baseCommand = c("Rscript", rtool),
+               inputs = InputParamList(p1, p2, p3, p4),
+               outputs = OutputParamList(o1))
+```
+
+To test the tool using data from the "pasilla" package.
+```{r, eval=FALSE}
+DE$counts <- list.files(system.file("extdata", package = "pasilla"),
+                        "treat", full.names = TRUE)
+DE$phenodata <- system.file("extdata/pasilla_sample_annotation.csv",
+                            package = "pasilla")
+DE$factor <- "condition"
+DE$control <- "type"
+system(paste0("export R_LIBS_USER=", Sys.getenv("R_LIBS_USER")))
+DEres <- runCWL(DE, outdir = tempdir(), stderr="",
+                Args = "--preserve-entire-environment")
+```
+
+## Build a simple DNASeq pipeline
+### RcwlPipelines
 
 The R scripts to build the CWL tools and pipelines based on the `Rcwl`
 package are stored in the "tools" and "pipelines" folder respectively.
@@ -585,6 +657,7 @@ plotCWL(Align)
 
 Let's run the pipeline.
 ```{r, eval=FALSE}
+library(BiocParallel)
 ids <- c("normal", "tumor")
 fq1 <- list.files("testdata", "1.fq.gz", full.names = TRUE)
 fq2 <- list.files("testdata", "2.fq.gz", full.names = TRUE)
@@ -603,7 +676,7 @@ paramList <- list(threads = 2,
 
 result <- runCWLBatch(cwl = Align, outdir = tempdir(), inputList,
                       paramList, BPPARAM = MulticoreParam(2),
-                      stderr = "")
+                      stderr = "", cwlTemp=TRUE)
 ```
 
 Check the results:
@@ -611,4 +684,4 @@ Check the results:
 dir(file.path(tempdir(), "normal"))
 ```
 
-## systemPipeR
+# systemPipeR

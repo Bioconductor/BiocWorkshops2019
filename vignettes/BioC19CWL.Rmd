@@ -532,7 +532,7 @@ runApp(app)
 Let's wrap the previous "exscrDoc.R" with `Rcwl`.
 ```{r}
 sysdir <- system.file(package="BioC19CWL")
-rtool <- file.path(sysdir, "testdata/exscrDoc.R")
+rtool <- file.path(sysdir, "vignettes/exscrDoc.R")
 p1 <- InputParam(id = "counts",
                  type = InputArrayParam(items = "File",
                                         prefix = "--counts"))
@@ -547,7 +547,8 @@ DE <- cwlParam(baseCommand = c("Rscript", rtool),
 ```
 
 To test the tool using data from the "pasilla" package.
-```{r, eval=TRUE}
+
+```{r, eval=FALSE}
 DE$counts <- list.files(system.file("extdata", package = "pasilla"),
                         "treat", full.names = TRUE)
 DE$phenodata <- system.file("extdata/pasilla_sample_annotation.csv",
@@ -558,7 +559,7 @@ DEres <- runCWL(DE, outdir = tempdir())
 ```
 
 Here are the command and results:
-```{r}
+```{r, eval=FALSE}
 head(DEres$command, n=22)
 head(DEres$output)
 ```
@@ -666,8 +667,8 @@ Let's run the pipeline.
 ```{r, eval=FALSE}
 library(BiocParallel)
 ids <- c("normal", "tumor")
-fq1 <- list.files(file.path(sysdir, "testdata"), "1.fq.gz", full.names = TRUE)
-fq2 <- list.files(file.path(sysdir, "testdata"), "2.fq.gz", full.names = TRUE)
+fq1 <- list.files(file.path(sysdir, "vignettes"), "1.fq.gz", full.names = TRUE)
+fq2 <- list.files(file.path(sysdir, "vignettes"), "2.fq.gz", full.names = TRUE)
 fq1 <- as.list(fq1)
 fq2 <- as.list(fq2)
 rg <- as.list(paste("@RG",
@@ -679,7 +680,7 @@ inputList <- list(RG = rg,
                   FQ1 = fq1,
                   FQ2 = fq2)
 paramList <- list(threads = 2,
-                  Ref = file.path(sysdir, "testdata/ref.fa"))
+                  Ref = file.path(sysdir, "vignettes/ref.fa"))
 
 result <- runCWLBatch(cwl = Align, outdir = tempdir(), inputList,
                       paramList, BPPARAM = MulticoreParam(2),

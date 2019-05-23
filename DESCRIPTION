@@ -1,13 +1,20 @@
 Package: BioC19CWL
-Title: What the Package Does (one line, title case)
-Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Title: combined CWL workshop
+Version: 0.0.1
+Authors@R:
+	c(person("Qiang", "Hu", email = "Qiang.Hu@roswellpark.org",
+		role = c("aut", "cre")),
+	  person("Marko", "Zecevic", email = "marko.zecevic@sbgenomics.com",
+		role = c("aut")),
+	  person("Daniela", "Cassol", email = "danielac@ucr.edu",
+		role = c("aut")))
+Description: This is a package for the combined CWL workshop presented at Bioc2019
 Depends: R (>= 3.6.0)
-License: What license is it under?
+License: Apache License 2.0
 Encoding: UTF-8
 LazyData: true
 Suggests: 
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+Imports: Rcwl, RcwlPipelines, systemPipeR, DESeq2, pasilla, ReportingTools, docopt

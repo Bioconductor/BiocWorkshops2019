@@ -1,4 +1,4 @@
-# Overall design
+# BiocWorkshops2019 Design
 
 A master BiocWorkshopsYYYY (where YYYY is the year of the Bioc conference) IS an R package.
 

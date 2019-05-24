@@ -69,4 +69,3 @@ Please be aware of the following deadlines for the [Bioconductor 2019 Conference
 
 [BiocWorkshops issue]: https://github.com/Bioconductor/BiocWorkshops2019/issues
 [Bioconductor 2019 Conference]: https://bioc2019.bioconductor.org/
-

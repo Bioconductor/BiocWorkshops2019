@@ -12,6 +12,11 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<center>
+
+![](images/cwllogo.jpg)
+</center>
+
 ```{r, echo=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -32,11 +37,11 @@ This workshop introduces how to use Common Workflow Language (CWL) in different 
 
 ## Pre-requisites
 - Basic knowledge of R and usage of Bioconductor packages for NGS analysis
-- Basic knowledge of running command-line software
+- Basic familiarity with running command-line tools
 - No prior experience with CWL is necessary!
 
 ## Workshop Participation
-Participants will be able to perform all analysis components of this workshop hands-on. Active user participation throughout the event is highly encouraged including but not limited to lecture material, hands-on sections and final discussion. 
+Participants will be able to try out all of the functionality described. Active user participation throughout the event is highly encouraged including but not limited to lecture material, hands-on sections and final discussion. 
 
 ## _R_ / _Bioconductor_ packages used
 * [`docopt`](https://github.com/docopt/docopt.R)
@@ -86,7 +91,7 @@ library(RcwlPipelines)
 * Integration of command-line tools via the CWL community standard
 * Design of CWL workflows
 * Understand how to wrap tools with `Rcwl`
-* Practice to build pipeline
+* Practice building a pipeline
 * ...
 
 ## Learning objectives
@@ -98,47 +103,68 @@ library(RcwlPipelines)
 
 # Introduction to CWL
 
-Biomedical data analysis workflows created using ad hoc methods are not easily sharable or reproducible, which can result in inconsistencies when attempting to replicate scientific results and publications or perform collaborative analyses. 
+Sharing a data analysis pipeline which you created using ad hoc methods is a challenging task. Failure to address any detail regarding commands, tools or the enviromenent in which the analysis is performed can hinder the reproducibility of your work.
 
 <center>
 
 ![](images/nocwl1.png)
 </center>
 
-To overcome these challenges, the bioinformatics community is embracing the use of software containers such as Docker and workflow description languages for easier documentation and replication of analysis pipelines.
+To overcome this challenge, the bioinformatics community is embracing the use of software container technologies (such as Docker) and workflow description languages for easier documentation and replication of analysis pipelines.
 
-Software containers enable easy packaging and sharing of command line tools and bioinformatics applications. Docker containers simplified how we share software, because they neatly package binaries and libraries together with their apps, and run them in a virtual environment directly on top of the host OS. That makes them much smaller, more portable and less computationally intense than virtural machines. However, containers do not come with instructions on how to execute these applications in a fashion that is human and machine-readable, enabling automation, scaling and reproducibility. 
+Docker containers simplified how we share software, because they neatly package up code and all its dependencies, and run it in an isolated environment directly on top of the host OS. Multiple containers can run on the same machine and share the OS kernel among themselves. That makes them much smaller, more portable and less computationally intense than virtual machines. 
 
-The Common Workflow Language (CWL), established in 2014, is a community-developed and widely adopted specification for describing containerized tools and workflows with plain text documents in a way that facilitates all the things we mentioned above. Applications described with Docker images and CWL will run consistently, in the way you intend, on everything from your local computer, your HPC, to your cloud infrastructure and various cloud platforms.
+However, containers do not come with instructions on how to execute these applications in a fashion that is human or machine-readable. This is where workflow description languages come into play. The Common Workflow Language (CWL), established in 2014, is a community-developed and widely adopted specification for describing containerized tools and workflows with plain text documents in a way that enables automation, scaling and reproducibility. Applications described with Docker images and CWL will run consistently, in the way you intend, on everything from your local computer, your HPC, to your cloud infrastructure and various cloud platforms.
 
 <center>
 
 ![](images/yescwl1.png)
 </center>
 
-CWL can be written in easily readable and parsable YAML, or a bit less readable, but just as parsable JSON - or a combination of both! It allows for extensions and tooling that facilitate code development, testing, and execution. One such set of tools is the Rabix project from Seven Bridges (Rabix.io), an open-source project that enables rapid composition and execution of CWL workflows in a manner that is scalable and reproducible.
+CWL can be written in easily readable and parsable YAML, or a bit less readable, but just as parsable JSON - or a combination of both! It allows for extensions and tooling that facilitate code development, testing, and execution. One such set of tools is the [Rabix project](Rabix.io) from Seven Bridges - an open-source project that enables rapid composition and execution of CWL workflows in a manner that is scalable and reproducible.
 
 Included in CWL tool or workflow description:
 
 * CWL version
+* Class: `CommandLineTool` or `Workflow`
 * All commands necessary to run tool(s)
 * References to containers containing the tools with all dependencies
 
 ```
-cwlVersion: v1.0
 class: CommandLineTool
-baseCommand: echo
+cwlVersion: v1.0
+id: samtools-1-6-view
+baseCommand:
+- /opt/samtools-1.6/samtools 
+- view
 inputs:
-  message:
-    type: string
-    inputBinding:
-      position: 1
-outputs: []
+- id: input_bam_file
+  type: File
+  inputBinding:
+    position: 2
+- id: output_filename
+  type: string
+  inputBinding:
+    position: 1
+    prefix: -o
+    valueFrom: |-
+      ${
+          return inputs.output_filename + ".sam"
+      }
+outputs:
+- id: sam_output
+  type: File?
+  outputBinding:
+    glob: "*.sam"
+requirements:
+- class: DockerRequirement
+  dockerPull: images.sbgenomics.com/milana_kaljevic/samtools:1.6
+- class: InlineJavascriptRequirement
 ```
 
 CWL requires executors or workflow engines to interpret and execute.
 
-## Usecase
+## Example usecase
 
 Perhaps you are a researcher analyzing a dataset using Bioconductor tools and are planning to share your methods and findings with the world. You want your analysis to be reproducible so that once it's published, anyone with the access to the input data can repeat everything you've done and produce exactly the same outputs.
 
@@ -209,7 +235,6 @@ library(docopt)
 opts <- docopt(doc)
 
 library(DESeq2)
-library(pasilla)
 library(ReportingTools)
 
 directory <- ""
@@ -254,6 +279,27 @@ Rscript exscrDoc.R --counts /Library/Frameworks/R.framework/Versions/3.5/Resourc
 
 ## Dockerizing
 
+If you are new to Docker, the official documentation is the best place to [get started](https://docs.docker.com/get-started/)! 
+
+In short: Docker is a platform for packaging, deploying, and running applications in containers. An application that runs in a container will always run the same on every system that supports Docker. A **Docker container** is an “instance” of a **Docker image**. 
+
+An image is an executable package that includes everything needed to run an application. It is comprised of multiple read-only layers, each generated when a command from the **Dockerfile** (a recipe for building Docker images) is executed during the Docker image build.
+
+Dockerfiles are text files that store the commands to create a Docker image. When using Dockerfiles, the process of building an image is automated as Docker reads the commands (instructions) from a Dockerfile and executes them in succession in order to create the final image. The benefit of Dockerfiles is that they document the whole procedure on how an image is created.
+
+```{}
+FROM ubuntu:bionic-20190515
+
+RUN apt-get update && apt-get install -y -q python-pip && \
+	pip install HTSeq==0.11.1 && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
+```
+
+A Dockerfile consists of two kind of items: instructions followed by arguments and comments. The first instruction and argument in our example Dockerfile assign a specific ubuntu 18.04 (revision identified by the `bionic-20190515` tag) image as the base image that we build upon. After that, each command adds another layer on top. And the base image we started from is probably also made of multiple layers. Think of layers as analogous to git commits - each layer is a set of filesystem changes. When you launch a container from an image, Docker adds a read-write layer to the top of that stack of read-only layers.
+
+The Bioconductor team maintains a [set of Docker images](https://www.bioconductor.org/help/docker/) which you can build upon. To be able to run our DESeq2 script in a container, we need to install ```DESeq2``` and ```ReportingTools``` libraries.
+
 ```{}
 FROM bioconductor/release_base2:R3.6.0_Bioc3.9
 
@@ -262,7 +308,6 @@ RUN R -e 'BiocManager::install("DESeq2")'
 RUN R -e 'BiocManager::install("ReportingTools")'
 
 COPY Dockerfile /opt/
-
 ```
 
 # Rcwl

@@ -1,5 +1,5 @@
 Package: BioC19CWL
-Title: combined CWL workshop
+Title: Bridging Bioconductor to other bioinformatics tools using CWL
 Version: 0.0.1
 Authors@R:
 	c(person("Qiang", "Hu", email = "Qiang.Hu@roswellpark.org",

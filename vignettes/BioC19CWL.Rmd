@@ -385,6 +385,7 @@ The `runCWL` generated two scripts with the default `tempfile` prefix, the tool 
 ## Components
 ### Input Parameters
 1. Essential Input parameters
+
 For the input parameters, three options need to be defined usually, *id*, *type*, and *prefix*. The type can be *string*, *int*, *long*, *float*, *double*, and so on. More detail can be found at: <https://www.commonwl.org/v1.0/CommandLineTool.html#CWLType>.
 
 Here is an example from [CWL user guide](http://www.commonwl.org/user_guide/03-input/). Here we defined an `echo` with different type of input parameters by `InputParam`. The `stdout` option can be used to caputre the standard output stream to a file.
@@ -393,7 +394,8 @@ Here is an example from [CWL user guide](http://www.commonwl.org/user_guide/03-i
 e1 <- InputParam(id = "flag", type = "boolean", prefix = "-f")
 e2 <- InputParam(id = "string", type = "string", prefix = "-s")
 e3 <- InputParam(id = "int", type = "int", prefix = "-i")
-e4 <- InputParam(id = "file", type = "File", prefix = "--file=", separate = FALSE)
+e4 <- InputParam(id = "file", type = "File",
+                 prefix = "--file=", separate = FALSE)
 echoA <- cwlParam(baseCommand = "echo",
                   inputs = InputParamList(e1, e2, e3, e4),
                   stdout = "output.txt")
@@ -414,6 +416,7 @@ r2$command
 ```
 
 2. Array Inputs
+
 A similar example to CWL user guide. We can define three different type of array as inputs. 
 ```{r}
 a1 <- InputParam(id = "A", type = "string[]", prefix = "-A")
@@ -442,6 +445,7 @@ r3$command
 
 ### Output Parameters
 1. Capturing Output
+
 The outputs, similar to the inputs, is a list of output parameters. Three options *id*, *type* and *glob* can be defined. The glob option is used to define a pattern to find files relative to the output directory.
 
 Here is an example to unzip a compressed `gz` file. First, we generate a compressed R script file.
@@ -512,8 +516,11 @@ r4b <- runCWL(GZ, outdir = tempdir())
 We can also capture multiple output files with `glob` pattern.
 ```{r}
 a <- InputParam(id = "a", type = InputArrayParam(items = "string"))
-b <- OutputParam(id = "b", type = OutputArrayParam(items = "File"), glob = "*.txt")
-touch <- cwlParam(baseCommand = "touch", inputs = InputParamList(a), outputs = OutputParamList(b))
+b <- OutputParam(id = "b", type = OutputArrayParam(items = "File"),
+                 glob = "*.txt")
+touch <- cwlParam(baseCommand = "touch",
+                  inputs = InputParamList(a),
+                  outputs = OutputParamList(b))
 touch$a <- c("a.txt", "b.gz", "c.txt")
 r5 <- runCWL(touch, outdir = tempdir())
 r5$output
@@ -530,11 +537,13 @@ sth.list <- as.list(LETTERS)
 names(sth.list) <- LETTERS
 
 ## submit with mutlicore
-result1 <- runCWLBatch(cwl = echo, outdir = tempdir(), inputList = list(sth = sth.list),
+result1 <- runCWLBatch(cwl = echo, outdir = tempdir(),
+                       inputList = list(sth = sth.list),
                        BPPARAM = MulticoreParam(4))
 
 ## submit with SGE
-result2 <- runCWLBatch(cwl = echo, outdir = tempdir(), inputList = list(sth = sth.list),
+result2 <- runCWLBatch(cwl = echo, outdir = tempdir(),
+                       inputList = list(sth = sth.list),
                        BPPARAM = BatchtoolsParam(workers = 4, cluster = "sge",
                                                  resources = list(queue = "all.q")))
 ```
@@ -610,12 +619,13 @@ head(DEres$output)
 ```
 
 ## Build a simple DNASeq pipeline
-### RcwlPipelines
+### RcwlPipelines package
 
 The R scripts to build the CWL tools and pipelines based on the `Rcwl`
-package are stored in the "tools" and "pipelines" folder respectively.
-The function `cwlTools` can be used to collect the available scripts.
-The `cachePath` can be your existing cache directory or a new folder.
+package are stored in the "tools" and "pipelines" folder respectively
+in the `RcwlPipelines` package. The function `cwlTools` can be used to
+collect the available scripts. The `cachePath` can be your existing
+cache directory or a new folder.
 
 ```{r}
 tools <- cwlTools(cachePath = tempdir())
@@ -624,7 +634,7 @@ tools
 
 The full paths can be pulled from the "fpath" column.
 ```{r, messange=FALSE}
-library(dplyr)
+suppressPackageStartupMessages(library(dplyr))
 bfcinfo(tools) %>% select(rname, fpath)
 ```
 

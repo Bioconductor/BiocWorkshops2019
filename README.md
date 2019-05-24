@@ -37,8 +37,11 @@ training. The workshops are divided into 3 sections:
 
 ## For Workshop Authors
 
-To contribute a new workshop, open a [BiocWorkshops issue][] asking to
-be added as a collaborator.
+To contribute a new workshop, open a [BiocWorkshops issue][] starting with
+the `[Workshop]` keyword in the title of the issue. Provide a link to the
+repository in the issue message body. You may also include GitHub usernames
+of workshop collaborators. For a successful workshop build, adhere to the
+following:
 
 1. Package your workshop as an R package
 2. Include a standard vignette in the vignettes directory

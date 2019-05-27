@@ -56,17 +56,13 @@ in the vignette using `system.file`
 Update the DESCRIPTION file adding packages utilized in your workshop to
 the **Imports** field.
 
-### Classifying your workshop
-
-Follow the numbering scheme above to classify your workshop by preceding your title with
-"Bioconductor 1xx:", "Bioconductor 2xx:", or "Bioconductor 5xx:". Final workshop numbers will be
-determined by an editor.
-
 ## Deadlines for Bioc2019
 
 Please be aware of the following deadlines for the [Bioconductor 2019 Conference][] in New York
 
 - **Mon May 27:** draft workshop materials submitted as an Issue to this Bioconductor GitHub repo
+- **Mon June 10:** complete workshop submitted. Only bugfixes / refinements should be made after this point.
+- **Mon June 17:** All workshops complete and building without error. No new commits to contributor repos will be incorporated.
 
 [BiocWorkshops issue]: https://github.com/Bioconductor/BiocWorkshops2019/issues
 [Bioconductor 2019 Conference]: https://bioc2019.bioconductor.org/

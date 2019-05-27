@@ -28,10 +28,13 @@ knitr::opts_chunk$set(
 options(showHeadLines=3)
 options(showTailLines=3)
 ```
+
 **Load R/Bioconductor packages**
 
 ```{r setup, message = FALSE}
 library(DelayedArray)
+library(HDF5Array)
+library(SummarizedExperiment)
 library(GDSArray)
 library(VCFArray)
 library(DelayedDataFrame)
@@ -41,11 +44,40 @@ library(VariantAnnotation)
 library(BiocWorkshops2019)
 ```
 
-# `DelayedArray` ... 
 
-This section is to be added by Hervé...
+# DelayedArray objects
 
-	
+
+## What are DelayedArray objects?
+
+TODO (by Hervé)
+
+
+## In-memory vs on-disk objects
+
+TODO (by Hervé)
+
+
+## Operations on DelayedArray objects
+
+TODO (by Hervé)
+
+
+## HDF5 backend
+
+TODO (by Hervé)
+
+
+## Using DelayedArray objects in a SummarizedExperiment object
+
+TODO (by Hervé)
+
+
+## Implementing a DelayedArray backend
+
+TODO (by Hervé)
+
+
 ## Extension of `DelayedArray` with GDS backend
 	
 ### Genomic Data Structure (GDS)

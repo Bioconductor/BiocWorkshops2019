@@ -33,7 +33,7 @@ training. The workshops are divided into 3 sections:
 
 - **Develop** (500-series chapters) contains workshops to help expert
   users hone their skills and contribute their domain-specific
-  knowledge to the _Bioconductor_ community.
+  knowledge to the _Bioconductor_ community. These are developer-day workshops.
 
 ## For Workshop Authors
 
@@ -43,12 +43,13 @@ repository in the issue message body. You may also include GitHub usernames
 of workshop collaborators. For a successful workshop build, adhere to the
 following:
 
-1. Package your workshop as an R package
+1. Package your workshop as an R package. The example package https://github.com/lpantano/dummychapter1 demonstrates all key elements of how your package must be prepared, and also provides an example `.travis.yml` for Continuous Integration against bioc-devel.
 2. Include a standard vignette in the vignettes directory
 3. Put any extra files (images, .bib) in `inst/vignettes` and reference them
 in the vignette using `system.file`
 4. Number **3** requires package chapter installation before vignette build or
 `build_vignettes=TRUE` when building the package.
+5. Use only one top-level section (`#`), for the title of your workshop. All other sections must be second-level (`##`) or lower. You may find the [usage section of the Bookdown documentation](https://bookdown.org/yihui/bookdown/usage.html) helpful for background.
 
 ### DESCRIPTION
 

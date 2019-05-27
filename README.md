@@ -65,7 +65,7 @@ determined by an editor.
 
 Please be aware of the following deadlines for the [Bioconductor 2019 Conference][] in New York
 
-- **Mon May 27:** draft workshop materials submitted to this Bioconductor GitHub repo as a pull request
+- **Mon May 27:** draft workshop materials submitted as an Issue to this Bioconductor GitHub repo
 
 [BiocWorkshops issue]: https://github.com/Bioconductor/BiocWorkshops2019/issues
 [Bioconductor 2019 Conference]: https://bioc2019.bioconductor.org/

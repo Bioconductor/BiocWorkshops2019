@@ -8,7 +8,7 @@ Authors@R: c(
     person("Hervé", " Pagès", email = "hpages@fredhutch.org", role = c("aut")))
 License: GPL-3
 Depends: R (>= 3.6.0), R (< 3.7.0)
-Imports: DelayedArray, HDF5Array, SummarizedExperiment, SeqArray, GDSArray, VCFArray, DelayedDataFrame, VariantAnnotation
+Imports: DelayedArray, HDF5Array, DelayedMatrixStats, SummarizedExperiment, SeqArray, GDSArray, VCFArray, DelayedDataFrame, VariantAnnotation
 SystemRequirements: https://github.com/Bioconductor/VariantExperiment
 Remotes: rstudio/bookdown
 Suggests: 

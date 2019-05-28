@@ -11,7 +11,7 @@ vignette: >
   %\VignetteIndexEntry{Lazy Representations of Very Large Genomic Data Resources in R/Bioconductor}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-date: "Last modified: May 23, 2019; Compiled: `r format(Sys.time(), '%B %d, %Y')`"
+date: "Last modified: May 27, 2019; Compiled: `r format(Sys.time(), '%B %d, %Y')`"
 output:
     BiocStyle::html_document:
         toc: true
@@ -29,28 +29,158 @@ options(showHeadLines=3)
 options(showTailLines=3)
 ```
 
-**Load R/Bioconductor packages**
+
+
+# Introduction
+
+TODO: Provide a quick description of the workshop with pre-requisites, goals, time outline, etc...
+
+Load the R/_Bioconductor_ packages used in this workshop:
 
 ```{r setup, message = FALSE}
 library(DelayedArray)
 library(HDF5Array)
+library(DelayedMatrixStats)
 library(SummarizedExperiment)
 library(GDSArray)
 library(VCFArray)
 library(DelayedDataFrame)
-library(SQLDataFrame) ## depends on "dplyr", and "dbplyr"
+#library(SQLDataFrame) ## depends on "dplyr", and "dbplyr"
 library(VariantAnnotation)
 ## library(VariantExperiment)  ## depends on "DelayedDataFrame", and "GDSArray"
-library(BiocWorkshops2019)
 ```
+
 
 
 # DelayedArray objects
 
 
-## What are DelayedArray objects?
+## What is a DelayedArray object?
+
+A DelayedArray object is a data structure that can be used to wrap any
+matrix-like or array-like dataset. This wrapping serves 2 purposes:
+(1) it allows to reduce considerably the amount of memory needed to
+perform common matrix or array operations on the dataset, and (2) it
+allows operating on the dataset while treating it as read-only.
+
+The DelayedArray class is an S4 class defined in the _DelayedArray_
+package. A simple way to create a DelayedArray object is to call the
+`DelayedArray()` constructor on a matrix-like or array-like object:
+
+```{r, DelayedArray}
+library(DelayedArray)
+
+m <- matrix(1:30, nrow=5)
+M <- DelayedArray(m)
+M
+
+a <- array(runif(15000000), dim=c(10000, 300, 5))
+A <- DelayedArray(a)
+A
+```
+
+See `?DelayedArray` for more information about the DelayedArray constructor.
+
+The matrix-like or array-like object passed to the constructor is called
+the _seed_ of the DelayedArray object.
+
+The seed can be an in-memory dataset (e.g. an ordinary matrix or array, or
+a dgCMatrix object from the _Matrix_ package) or an on-disk dataset (e.g.
+an HDF5 dataset).
+
+Here is an example of a DelayedArray object where the seed is an HDF5 dataset:
+
+```{r}
+library(HDF5Array)
+A2 <- as(a, "HDF5Array")   # write 'a' to an HDF5 file
+A2
+```
+
+An HDF5Array is a particular kind of DelayedArray object:
+
+```{r}
+is(A2, "DelayedArray")
+```
+
+`A2`'s memory footprint is very small because the data is on disk:
+
+```{r}
+object.size(A2)
+object.size(a)
+```
+
+Think of `A2` as a pointer to the HDF5 dataset. To see where `A2` is pointing
+at, look at its seed:
+
+```{r}
+seed(A2)                   # an HDF5ArraySeed object
+```
+
+DelayedArray objects support many common matrix or array operations:
+
+```{r}
+A3 <- log(A2 + 1)
+A3
+
+sum(A3)
+```
+
+
+## Operations on DelayedArray objects
+
+Operations on a DelayedArray object are either `delayed` or `block-processed`.
+
+### Delayed operations
+
+For example the `+ 1` and `log` operations in `A3 <- log(A2 + 1)` are delayed.
+This means that they are very fast and produce a new DelayedArray object
+with the same seed as the input object:
+
+```{r}
+seed(A3)
+
+identical(seed(A2), seed(A3))
+```
+
+Note that `A3`'s memory footprint is still very small because all the data
+is still on disk:
+```
+object.size(A3)
+
+showtree(A3)
+```
+
+The only difference between `A2` and `A3` is that `A3` now carries delayed
+operations.
+
+We could keep going:
+
+```{r}
+M <- t(A3[ , 1:20, 5])
+M
+```
+
+The seed is still the same. This only adds more delayed operations to be
+applied to it:
+
+```{r}
+seed(M)
+
+object.size(M)
+
+showtree(M)
+```
+
+An important principle: The seed of a DelayedArray object is **always**
+treated as a _read-only_ object so will never be modified by the operations
+we perform on the object.
+
+### Block-processed operations
 
 TODO (by Hervé)
+
+- Refer to _DelayedMatrixStats_ package for more matrix summarization
+  operations on DelayedMatrix objects.
 
 
 ## In-memory vs on-disk objects
@@ -58,14 +188,11 @@ TODO (by Hervé)
 TODO (by Hervé)
 
 
-## Operations on DelayedArray objects
-
-TODO (by Hervé)
-
-
 ## HDF5 backend
 
 TODO (by Hervé)
+- `path(A2)`
+- `h5ls(path(A2))`
 
 
 ## Using DelayedArray objects in a SummarizedExperiment object
@@ -76,6 +203,19 @@ TODO (by Hervé)
 ## Implementing a DelayedArray backend
 
 TODO (by Hervé)
+
+
+## Conclusion
+
+TODO (by Hervé)
+
+- Don't miss the "Effectively using the DelayedArray framework to support
+  the analysis of large datasets" workshop by Pete Hickey if you are
+  planning to use DelayedArray objects in your package.
+
+
+
+# Specialized DelayedArray backends
 
 
 ## Extension of `DelayedArray` with GDS backend
@@ -306,6 +446,7 @@ log(ds+5)
 ```
 
 
+
 # `DelayedDataFrame` for delayed representation of metadata 
 	
 ## Introduction
@@ -456,6 +597,8 @@ lazyIndex(ddfrb)
 (ddfcb <- cbind(varid = ddf1[,2, drop=FALSE], AA=ddf1[, 3, drop=FALSE]))
 lazyIndex(ddfcb)
 ```
+
+
 
 # `VariantExperiment` container for lazy infrastructures
 
@@ -722,4 +865,8 @@ titv(ve, by.sample=FALSE)
 ## countSingletons
 countSingletons(ve)
 ```
-# examples? use case? 
+
+
+
+# examples? use case?
+

@@ -9,33 +9,9 @@ documentclass: book
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
 
-# Introduction
+# Instructions For Workshop Authors
 
-Author:
-    Martin Morgan^[Roswell Park Comprehensive Cancer Center, Buffalo, NY].
-    <br/>
-Last modified: May 23, 2019
-
-## For Everyone
-
-This book contains workshops used in _R_ / _Bioconductor_
-training. The workshops are divided into 3 sections:
-
-- **Learn** (100-series chapters) contains material for beginning
-  users of _R_ and _Bioconductor_. The _Bioconductor_-related material
-  is relevant even for experienced _R_ users who are new to
-  _Bioconductor_.
-
-- **Use** (200-series chapters) contains workshops emphasizing use of
-  _Bioconductor_ for common tasks, e.g., bulk RNA-seq differential
-  expression, ChIP-seq, single-cell analysis, gene set enrichment, and
-  annotation.
-
-- **Develop** (500-series chapters) contains workshops to help expert
-  users hone their skills and contribute their domain-specific
-  knowledge to the _Bioconductor_ community. These are developer-day workshops.
-
-## For Workshop Authors
+## Getting started
 
 To contribute a new workshop, open a [BiocWorkshops issue][] starting with
 the `[Workshop]` keyword in the title of the issue. Provide a link to the

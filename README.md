@@ -50,6 +50,7 @@ in the vignette using `system.file`
 4. Number **3** requires package chapter installation before vignette build or
 `build_vignettes=TRUE` when building the package.
 5. Use only one top-level section (`#`), for the title of your workshop. All other sections must be second-level (`##`) or lower. You may find the [usage section of the Bookdown documentation](https://bookdown.org/yihui/bookdown/usage.html) helpful for background.
+6. Do not use `BiocStyle` functionality. The style will be based on bookdown/gitbook. 
 
 ### DESCRIPTION
 

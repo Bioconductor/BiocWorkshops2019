@@ -7,5 +7,5 @@ Depends: R (>= 3.6.0), R (< 3.7.0),
     motifStackWorkshop
 Remotes:
     rstudio/bookdown,
-    mikelove/plyrangesTximetaCaseStudy@e6bb585c,
+    mikelove/plyrangesTximetaCaseStudy,
     jianhong/motifStackWorkshop

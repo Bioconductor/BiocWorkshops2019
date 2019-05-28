@@ -33,6 +33,10 @@ in the vignette using `system.file`
 Update the DESCRIPTION file adding packages utilized in your workshop to
 the **Imports** field.
 
+### Use bioc-devel
+
+BioC2019 workshops will run on **bioc-devel (3.10)**. That means that this book will be built on bioc-devel, workshop participants will use virtual machines running bioc-devel, and your workshops will be tested against bioc-devel. See [Using ‘bioc-devel’ during mid-April to mid-October](https://www.bioconductor.org/developers/how-to/useDevel/) for how to run bioc-devel; thankfully we are in the easy time of year for running release and devel side-by-side. Also, the [dummy chapter](https://github.com/lpantano/dummychapter1) includes a highly recommendable TravisCI setup for Continuous Integration against bioc-devel.
+
 ## Deadlines for Bioc2019
 
 Please be aware of the following deadlines for the [Bioconductor 2019 Conference][] in New York

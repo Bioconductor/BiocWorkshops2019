@@ -3,6 +3,9 @@ Type: Book
 Title: Bioconductor 2019 Conference Workshops
 Version: 3.9.0
 Depends: R (>= 3.6.0), R (< 3.7.0)
-Imports: SummarizedExperiment
-Remotes: rstudio/bookdown
+Imports: SummarizedExperiment,
+    plyrangesTximetaCaseStudy
+Remotes:
+    rstudio/bookdown,
+    mikelove/plyrangesTximetaCaseStudy
 

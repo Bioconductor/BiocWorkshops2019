@@ -24,7 +24,8 @@ Imports:
     BiocIntro,
     recountWorkshop2019,
     MultiAssayWorkshop,
-    genome
+    genome,
+    DelayedArrayWorkshop
 Remotes: 
     rstudio/bookdown,
     mikelove/plyrangesTximetaCaseStudy,
@@ -47,4 +48,5 @@ Remotes:
     Bioconductor/BiocIntro@BioC2019,
     LieberInstitute/recountWorkshop2019,
     waldronlab/MultiAssayWorkshop,
-    genome=databio/genome-region-workshop
+    genome=databio/genome-region-workshop,
+    DelayedArrayWorkshop=PeteHaitch/BioC2019_DelayedArray_workshop

@@ -24,7 +24,7 @@ Imports:
     BiocIntro,
     recountWorkshop2019,
     MultiAssayWorkshop,
-    genome,
+    genomeRegionPooling,
     DelayedArrayWorkshop,
     muscWorkshop,
     iSEEWorkshop2019
@@ -50,7 +50,7 @@ Remotes:
     Bioconductor/BiocIntro@BioC2019,
     LieberInstitute/recountWorkshop2019,
     waldronlab/MultiAssayWorkshop,
-    genome=databio/genome-region-workshop,
+    genomeRegionPooling=databio/genome-region-workshop,
     DelayedArrayWorkshop=PeteHaitch/BioC2019_DelayedArray_workshop,
     muscWorkshop=HelenaLC/BioC2019-workshop_multi-scRNA-seq,
     kevinrue/iSEEWorkshop2019

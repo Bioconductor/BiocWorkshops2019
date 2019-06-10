@@ -23,7 +23,8 @@ Imports:
     Bioc2019pathwayPCA,
     BiocIntro,
     recountWorkshop2019,
-    MultiAssayWorkshop
+    MultiAssayWorkshop,
+    genome
 Remotes: 
     rstudio/bookdown,
     mikelove/plyrangesTximetaCaseStudy,
@@ -45,4 +46,5 @@ Remotes:
     TransBioInfoLab/Bioc2019pathwayPCA,
     Bioconductor/BiocIntro@BioC2019,
     LieberInstitute/recountWorkshop2019,
-    waldronlab/MultiAssayWorkshop
+    waldronlab/MultiAssayWorkshop,
+    genome=databio/genome-region-workshop

@@ -25,7 +25,8 @@ Imports:
     recountWorkshop2019,
     MultiAssayWorkshop,
     genome,
-    DelayedArrayWorkshop
+    DelayedArrayWorkshop,
+    muscWorkshop
 Remotes: 
     rstudio/bookdown,
     mikelove/plyrangesTximetaCaseStudy,
@@ -49,4 +50,5 @@ Remotes:
     LieberInstitute/recountWorkshop2019,
     waldronlab/MultiAssayWorkshop,
     genome=databio/genome-region-workshop,
-    DelayedArrayWorkshop=PeteHaitch/BioC2019_DelayedArray_workshop
+    DelayedArrayWorkshop=PeteHaitch/BioC2019_DelayedArray_workshop,
+    muscWorkshop=HelenaLC/BioC2019-workshop_multi-scRNA-seq

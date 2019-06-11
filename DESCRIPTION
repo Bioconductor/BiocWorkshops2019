@@ -26,7 +26,8 @@ Imports:
     genomeRegionPooling,
     DelayedArrayWorkshop,
     muscWorkshop,
-    iSEEWorkshop2019
+    iSEEWorkshop2019,
+    MicrobiomeWorkshop
 Remotes: 
     rstudio/bookdown,
     mikelove/plyrangesTximetaCaseStudy,
@@ -51,4 +52,5 @@ Remotes:
     genomeRegionPooling=databio/genome-region-workshop,
     DelayedArrayWorkshop=PeteHaitch/BioC2019_DelayedArray_workshop,
     muscWorkshop=HelenaLC/BioC2019-workshop_multi-scRNA-seq,
-    kevinrue/iSEEWorkshop2019
+    kevinrue/iSEEWorkshop2019,
+    waldronlab/MicrobiomeWorkshop

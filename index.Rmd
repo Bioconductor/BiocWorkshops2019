@@ -1,0 +1,100 @@
+---
+knit: "bookdown::render_book"
+title: "The Bioconductor 2019 Workshop Compilation"
+description: "This book contains all the workshops presented at the Bioconductor 2019 Conference"
+site: bookdown::bookdown_site
+github-repo: Bioconductor/BiocWorkshops
+documentclass: book
+geometry: 
+  - inner=1.25in
+  - outer=1in
+---
+
+# Introduction {-}
+
+Editors:
+    Sean Davis^[Center for Cancer Research, National Cancer Institute, National Institutes of Health, Bethesda, MD]
+    Lorea Pantano Rubino^[Harvard Chan School of Public Health, Boston, MA]
+    Marcel Ramos^[City University of New York and Roswell Park Comprehensive Cancer Center, NY]
+    Levi Waldron^[City University of New York, New York, NY]
+     <br/>
+Last modified: `r file.info('index.Rmd')$mtime`
+
+Welcome to Bioc2019. This year's conference includes a wide array of workshops
+for audiences ranging from beginner to advance users and developers. Workshop
+materials are available as a book in html, pdf, and eBook format at
+https://bioconductor.github.io/BiocWorkshops2019/. Workshops are organized by level
+and topic according to numbers, as described below. Every workshop starts with a
+syllabus that will help you to decide whether it matches your learning goals.
+
+## The Workshops
+
+This book contains workshops for _R_ / _Bioconductor_
+training. The workshops are divided into 3 sections:
+
+- **Learn** (100-series chapters) contains material for beginning
+  users of _R_ and _Bioconductor_. However, even experienced _R_ and _Bioconductor_ 
+  users may find something new here. 
+
+- **Use** (200-series chapters) contains workshops emphasizing use of
+  _Bioconductor_ for common tasks, e.g., RNA-seq differential
+  expression, single-cell analysis, gene set enrichment, multi'omics analysis, 
+  genome analysis, network analysis, and pharmacogenomics.
+
+- **Develop** (500-series chapters) contains workshops to help expert
+  users hone their skills and contribute their domain-specific
+  knowledge to the _Bioconductor_ community. These workshops are presented
+  on "Developer Day". 
+
+## How to use these workshops
+
+These workshops have a lot of package dependencies, and some use data
+that you must have on disk. There are several ways to run the code
+from these workshops yourself.
+
+### Install on your own computer
+
+These workshops were developed for Bioconductor 3.8 (development
+branch) to allow teaching the most up-to-date methods. Some, but not
+all, workshop materials will work on Bioconductor 3.7, and (almost?)
+all should work after the release of Bioconductor 3.8 in October
+2018. To run the workshops on your own computer, you should install
+Bioconductor >= 3.8 (which is the development version before October
+2018, and the release version thereafter). The following commands
+should then install all needed dependencies, at least for Linux:
+
+```
+if (!require("BiocManager"))
+    install.packages("BiocManager")
+BiocManager::install("Bioconductor/BiocWorkshops")
+```
+
+We have noticed that on Windows and Mac, this may not install the
+required annotation and experimental data packages. If you get errors
+about missing dependencies, you can install these with additional
+calls to the `BiocManager::install()` function.
+
+
+### Use the exact same AMI as the workshop
+
+Each participant in the Bioc2018 workshops was provided with their own
+machine image (called an Amazon Machine Image [AMI]) that contained
+up-to-date versions of R, required R packages, all necessary operating
+system libraries, and all workshop materials. This image has been
+tested by the organizers and more than 100 workshop participants, so
+if you use it, *everything will just work.* Using this image is the
+most hassle-free way to work through these workshops yourself without
+having to worry about setup. 
+
+## License
+
+These materials are published under the Creative Commons CC BY license. You are free to:
+* **Share** — copy and redistribute the material in any medium or format
+* **Adapt** — remix, transform, and build upon the material for any purpose, even commercially.
+
+Under the following terms:
+* **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+* **No additional restrictions** — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
+
+[View License Deed](https://creativecommons.org/licenses/by/4.0) | [View Legal Code](https://creativecommons.org/licenses/by/4.0/legalcode)
+[Bioconductor 2018 Conference]: https://bioc2018.bioconductor.org/

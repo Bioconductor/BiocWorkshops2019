@@ -1,10 +1,56 @@
 Package: BiocWorkshops2019
 Type: Book
 Title: Bioconductor 2019 Conference Workshops
-Version: 3.9.0
-Depends: R (>= 3.6.0), R (< 3.7.0),
-plyrangesTximetaCaseStudy
-bookdown
-Remotes:
+Version: 3.9.1
+Depends: R (>= 3.6.0), R (< 3.7.0)
+Imports:
+    plyrangesTximetaCaseStudy,
+    motifStackWorkshop,
+    PublicDataResources,
+    BioconductorOnContainers,
+    BiocCloudws,
+    EpiForBioWorkshop,
+    BioC19CWL,
+    OSCABioc2019,
+    enrichOmics,
+    CNVWorkshop,
+    plyrangesWorkshops,
+    bioc2019singlecell,
+    ATACseqQCWorkshop,
+    Bioc2019PanCancerStudy,
+    Bioc2019Anno,
+    Bioc2019pathwayPCA,
+    BiocIntro,
+    recountWorkshop2019,
+    MultiAssayWorkshop,
+    genomeRegionPooling,
+    DelayedArrayWorkshop,
+    muscWorkshop,
+    iSEEWorkshop2019,
+    MicrobiomeWorkshop
+Remotes: 
     rstudio/bookdown,
-    mikelove/plyrangesTximetaCaseStudy
+    mikelove/plyrangesTximetaCaseStudy,
+    jianhong/motifStackWorkshop,
+    waldronlab/PublicDataResources,
+    nturaga/BioconductorOnContainers,
+    BiocCloudws=vjcitn/Bioc2019CloudWkshop,
+    cmirzayi/EpiForBioWorkshop,
+    hubentu/BioC19CWL,
+    robertamezquita/OSCABioc2019,
+    waldronlab/enrichOmics,
+    waldronlab/CNVWorkshop,
+    sa-lee/plyrangesWorkshops,
+    drisso/bioc2019singlecell,
+    haibol2016/ATACseqQCWorkshop,
+    TransBioInfoLab/Bioc2019PanCancerStudy,
+    jmacdon/Bioc2019Anno,
+    TransBioInfoLab/Bioc2019pathwayPCA,
+    Bioconductor/BiocIntro@BioC2019,
+    LieberInstitute/recountWorkshop2019,
+    waldronlab/MultiAssayWorkshop,
+    genomeRegionPooling=databio/genome-region-workshop,
+    DelayedArrayWorkshop=PeteHaitch/BioC2019_DelayedArray_workshop,
+    muscWorkshop=HelenaLC/BioC2019-workshop_multi-scRNA-seq,
+    kevinrue/iSEEWorkshop2019,
+    waldronlab/MicrobiomeWorkshop

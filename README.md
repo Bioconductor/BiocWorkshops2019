@@ -16,13 +16,13 @@ as a `volume`. To use the entire set of workshop materials, do:
 - Make a directory for the installed packages:
 
     ```
-    mkdir ~/bioc-libs # or another convenient directory with about 20GB of free space
+    mkdir /home/ubuntu/bioc-libs # or another convenient directory with about 20GB of free space
     ```
  
 - Download and untar entire tar.gz file with all installed packages and materials:
 
     ```
-    cd ~/bioc-libs # use the directory from above
+    cd /home/ubuntu/bioc-libs # use the directory from above
     wget https://s3.amazonaws.com/biocbuild.cancerdatasci.org/bioc2019-usr-local.tar.gz
     tar -xzf bioc2019-usr-local.tar.gz
     ```
@@ -30,8 +30,8 @@ as a `volume`. To use the entire set of workshop materials, do:
 - Run docker locally with (you may or may not need `sudo` depending on your docker setup):
     
     ```
-    sudo docker run --name bioc_2019 -d -v ~/bioc-libs:/usr/local/lib/R/site-library \
-        --restart=always \
+    # again, use the directory from above
+    sudo docker run --name bioc_2019 -d -v /home/ubuntu/bioc-libs:/usr/local/lib/R/site-library \
         -p 80:8787 -e PASSWORD=bioc seandavi/bioc_2019
     ```
 

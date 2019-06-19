@@ -1,6 +1,6 @@
 ## Using the Amazon Machine Image
 
-The AMI ID is currently: `ami-0573abc42f2aa8c1b`
+The AMI ID is currently: `ami-06a87b03fb3cdf14c`
 
 You can launch the AMI using the command line `aws` utility, an SDK like boto3/python, or
 from the Amazon Web Services Console. 

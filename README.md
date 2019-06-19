@@ -7,7 +7,49 @@ github-repo: Bioconductor/BiocWorkshops2019
 documentclass: book
 ---
 
-<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+This repository contains details of the build process and usage for materials 
+from the [Bioc2019 conference]. 
+
+[Bioc2019 conference]: bioc2019.bioconductor.org
+
+# Running workshop materials locally
+
+The workshops (except the CWL workshop) are all installed and
+ready-to-run inside [docker]; you will need to *install docker* on your machine to 
+follow along. We have a base docker image [seandavi/bioc_2019] that contains
+the operating system and base R installation. The workshops and additional package (over 600)
+are included as a separate download that can be mounted into the container
+as a `volume`. To use the entire set of workshop materials, do:
+
+- Make a directory for the installed packages:
+
+    ```
+    mkdir ~/bioc-libs # or another convenient directory with about 20GB of free space
+    ```
+ 
+- Download and untar entire tar.gz file with all installed packages and materials:
+
+    ```
+    cd ~/bioc-libs # use the directory from above
+    wget https://s3.amazonaws.com/biocbuild.cancerdatasci.org/bioc2019-usr-local.tar.gz
+    tar -xzf bioc2019-usr-local.tar.gz
+    ```
+    
+- Run docker locally with (you may or may not need `sudo` depending on your docker setup):
+    
+    ```
+    sudo docker run --name bioc_2019 -d -v ~/bioc-libs:/usr/local/lib/R/site-library \
+        --restart=always \
+        -p 80:8787 -e PASSWORD=bioc seandavi/bioc_2019
+    ```
+
+- Credentials:
+  - username: 'rstudio'
+  - password: 'as you set it--bioc above'
+
+[docker]: https://docker.io
+[seandavi/bioc_2019]: https://cloud.docker.com/u/seandavi/repository/docker/seandavi/bioc_2019
+
 
 # Instructions For Workshop Authors
 
@@ -48,3 +90,4 @@ Please be aware of the following deadlines for the [Bioconductor 2019 Conference
 [BiocWorkshops issue]: https://github.com/Bioconductor/BiocWorkshops2019/issues
 [Bioconductor 2019 Conference]: https://bioc2019.bioconductor.org/
 
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.

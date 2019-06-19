@@ -1,11 +1,3 @@
----
-knit: "bookdown::render_book"
-title: "The Bioconductor 2019 Workshops Repository"
-description: "This book is a central repository for all the workshops submitted to the Bioconductor 2019 Conference"
-site: bookdown::bookdown_site
-github-repo: Bioconductor/BiocWorkshops2019
-documentclass: book
----
 
 This repository contains details of the build process and usage for materials 
 from the [Bioc2019 conference]. 

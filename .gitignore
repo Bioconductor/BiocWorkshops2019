@@ -34,3 +34,5 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+_book
+/_bookdown_files/plyrangesTximeta_files/figure-html/unnamed-chunk-28-1.png

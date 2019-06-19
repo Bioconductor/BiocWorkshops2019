@@ -1,0 +1,21 @@
+To collect packages:
+
+- Inside the docker container running R
+
+    cd /usr/local/lib/R/site-library 
+    tar -czf /tmp/bioc-lib.tar.gz
+    # copy to storage location
+    aws s3 cp ~/bioc-lib.tar.gz s3://biocbuild.cancerdatasci.org/bioc2019-usr-local.tar.gz
+
+
+- on host machine to run NEW docker
+
+    cd /tmp
+    mkdir bioc-local
+    cd bioc-local
+    wget https://s3.amazonaws.com/biocbuild.cancerdatasci.org/bioc2019-usr-local.tar.gz
+    tar -xzf bioc2019-usr-local.tar.gz
+    sudo docker run -d -v /tmp/bioc-local:/usr/local/lib/R/site-library \
+        --restart=always \
+        -p 80:8787 -e PASSWORD=bioc seandavi/bioc_2019
+    

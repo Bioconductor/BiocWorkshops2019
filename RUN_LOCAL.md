@@ -27,4 +27,8 @@ installed packages are separate. To use the entire set of workshop materials, do
         -p 80:8787 -e PASSWORD=bioc seandavi/bioc_2019
     ```
 
+- Credentials:
+  - username: 'rstudio'
+  - password: 'as you set it--bioc above'
+
 [docker]: https://docker.io

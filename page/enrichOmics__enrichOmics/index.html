@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html><head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta charset="utf-8">
+  <title>
+      
+  </title>
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="../../assets/css/normalize.css">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/syntax.css">
+  
+
+</head>
+<body>
+        <div class="container"><header role="banner">
+  <div class="wrap">
+    
+      <img class="logo" src="../.././imgs/cover.png" alt="bioconductor" style="height:60px">
+    
+    <h1 class="site-title"><a class="title-link" href="../../">BiocWorkshops2019</a></h1>
+  </div>
+</header>
+<div class="wrap content">
+                <section id="main" class="main-content" role="main">
+
+
+
+
+
+<div id="functional-enrichment-analysis-of-high-throughput-omics-data" class="section level1">
+<h1>Functional enrichment analysis of high-throughput omics data</h1>
+<div id="instructor-names-and-contact-information" class="section level2">
+<h2>Instructor names and contact information</h2>
+<ul>
+<li>Ludwig Geistlinger (<a href="mailto:Ludwig.Geistlinger@sph.cuny.edu" class="email">Ludwig.Geistlinger@sph.cuny.edu</a>)</li>
+<li>Levi Waldron</li>
+</ul>
+<p>CUNY School of Public Health
+55 W 125th St, New York, NY 10027</p>
+</div>
+<div id="workshop-description" class="section level2">
+<h2>Workshop Description</h2>
+<p>This workshop gives an in-depth overview of existing methods for enrichment
+analysis of gene expression data with regard to functional gene sets, pathways,
+and networks.
+The workshop will help participants understand the distinctions between
+assumptions and hypotheses of existing methods as well as the differences in
+objectives and interpretation of results.
+It will provide code and hands-on practice of all necessary steps for differential
+expression analysis, gene set- and network-based enrichment analysis, and
+identification of enriched genomic regions and regulatory elements, along with
+visualization and exploration of results.</p>
+<div id="pre-requisites" class="section level3">
+<h3>Pre-requisites</h3>
+<ul>
+<li>Basic knowledge of R syntax</li>
+<li>Familiarity with the SummarizedExperiment class</li>
+<li><p>Familiarity with the GenomicRanges class</p></li>
+<li>Familiarity with high-throughput gene expression data as obtained with
+microarrays and RNA-seq</li>
+<li><p>Familiarity with the concept of differential expression analysis
+(with e.g. limma, edgeR, DESeq2)</p></li>
+</ul>
+</div>
+<div id="workshop-participation" class="section level3">
+<h3>Workshop Participation</h3>
+<p>Execution of example code and hands-on practice</p>
+</div>
+<div id="r-bioconductor-packages-used" class="section level3">
+<h3><em>R</em> / <em>Bioconductor</em> packages used</h3>
+<ul>
+<li><a href="http://bioconductor.org/packages/EnrichmentBrowser">EnrichmentBrowser</a></li>
+<li><a href="http://bioconductor.org/packages/regioneR">regioneR</a></li>
+<li><a href="http://bioconductor.org/packages/airway">airway</a></li>
+<li><a href="http://bioconductor.org/packages/ALL">ALL</a></li>
+<li><a href="http://bioconductor.org/packages/hgu95av2.db">hgu95av2.db</a></li>
+<li><a href="http://bioconductor.org/packages/BSgenome.Hsapiens.UCSC.hg19.masked">BSgenome.Hsapiens.UCSC.hg19.masked</a></li>
+</ul>
+</div>
+<div id="time-outline" class="section level3">
+<h3>Time outline</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Activity</th>
+<th>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Background</td>
+<td>30m</td>
+</tr>
+<tr class="even">
+<td>Differential expression analysis</td>
+<td>15m</td>
+</tr>
+<tr class="odd">
+<td>Gene set analysis</td>
+<td>30m</td>
+</tr>
+<tr class="even">
+<td>Gene network analysis</td>
+<td>15m</td>
+</tr>
+<tr class="odd">
+<td>Genomic region analysis</td>
+<td>15m</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="goals-and-objectives" class="section level2">
+<h2>Goals and objectives</h2>
+<p>Theory:</p>
+<ul>
+<li>Gene sets, pathways &amp; regulatory networks</li>
+<li>Resources</li>
+<li>Gene set analysis vs. gene set enrichment analysis</li>
+<li>Underlying null: competitive vs. self-contained</li>
+<li>Generations: ora, fcs &amp; topology-based</li>
+</ul>
+<p>Practice:</p>
+<ul>
+<li>Data types: microarray vs. RNA-seq</li>
+<li>Differential expression analysis</li>
+<li>Defining gene sets according to GO and KEGG</li>
+<li>GO/KEGG overrepresentation analysis</li>
+<li>Functional class scoring &amp; permutation testing</li>
+<li>Network-based enrichment analysis</li>
+<li>Genomic region enrichment analysis</li>
+</ul>
+</div>
+<div id="where-does-it-all-come-from" class="section level2">
+<h2>Where does it all come from?</h2>
+<p>Test whether known biological functions or processes are over-represented
+(= enriched) in an experimentally-derived gene list, e.g. a list of
+differentially expressed (DE) genes. See
+<a href="https://doi.org/10.1093/bioinformatics/btm051">Goeman and Buehlmann, 2007</a> for
+a critical review.</p>
+<p>Example: Transcriptomic study, in which 12,671 genes have been tested for
+differential expression between two sample conditions and 529 genes were found
+DE.</p>
+<p>Among the DE genes, 28 are annotated to a specific functional gene set, which
+contains in total 170 genes. This setup corresponds to a 2x2 contingency table,</p>
+<pre class="r"><code>deTable &lt;-
+     matrix(c(28, 142, 501, 12000),
+            nrow = 2,
+            dimnames = list(c(&quot;DE&quot;, &quot;Not.DE&quot;),
+                            c(&quot;In.gene.set&quot;, &quot;Not.in.gene.set&quot;)))
+deTable</code></pre>
+<pre><code>##        In.gene.set Not.in.gene.set
+## DE              28             501
+## Not.DE         142           12000</code></pre>
+<p>where the overlap of 28 genes can be assessed based on the hypergeometric distribution.
+This corresponds to a one-sided version of Fisher’s exact test, yielding here a
+significant enrichment.</p>
+<pre class="r"><code>fisher.test(deTable, alternative = &quot;greater&quot;)</code></pre>
+<pre><code>## 
+##  Fisher's Exact Test for Count Data
+## 
+## data:  deTable
+## p-value = 4.088e-10
+## alternative hypothesis: true odds ratio is greater than 1
+## 95 percent confidence interval:
+##  3.226736      Inf
+## sample estimates:
+## odds ratio 
+##   4.721744</code></pre>
+<p>This basic principle is at the foundation of major public and commercial enrichment
+tools such as <a href="https://david.ncifcrf.gov/">DAVID</a> and
+<a href="https://www.pathwaystudio.com">Pathway Studio</a>.</p>
+<p>Although gene set enrichment methods have been primarily developed and applied
+on transcriptomic data, they have recently been modified, extended and applied
+also in other fields of genomic and biomedical research. This includes novel
+approaches for functional enrichment analysis of proteomic and metabolomic data
+as well as genomic regions and disease phenotypes,
+<a href="https://doi.org/10.1002/0471250953.bi1328s53">Lavallee and Yates, 2016</a>,
+<a href="https://doi.org/10.1007/978-1-4939-3572-7_20">Chagoyen et al., 2016</a>,
+<a href="https://doi.org/10.1038/nbt.1630">McLean et al., 2010</a>,
+<a href="https://doi.org/10.1002/gepi.21617">Ried et al., 2012</a>.</p>
+</div>
+<div id="gene-expression-based-enrichment-analysis" class="section level2">
+<h2>Gene expression-based enrichment analysis</h2>
+<p>The first part of the workshop is largely based on the
+<a href="http://bioconductor.org/packages/EnrichmentBrowser">EnrichmentBrowser</a>
+package, which implements an analysis pipeline
+for high-throughput gene expression data as measured with microarrays and
+RNA-seq. In a workflow-like manner, the package brings together a selection of
+established Bioconductor packages for gene expression data analysis. It
+integrates a wide range of gene set enrichment analysis methods and facilitates
+combination and exploration of results across methods.</p>
+<p>&lt;img src=“<a href="https://github.com/waldronlab/BrownCOBRE2018/blob/master/notebooks_day2/EnrichmentBrowserWorkflow.png?raw=true" class="uri">https://github.com/waldronlab/BrownCOBRE2018/blob/master/notebooks_day2/EnrichmentBrowserWorkflow.png?raw=true</a>”, alt=“EnrichmentBrowserWorkflow image”, style=“width:650px”&gt;</p>
+<pre class="r"><code>suppressPackageStartupMessages(library(EnrichmentBrowser))</code></pre>
+<p>Further information can be found in the
+<a href="http://www.bioconductor.org/packages/release/bioc/vignettes/EnrichmentBrowser/inst/doc/EnrichmentBrowser.pdf">vignette</a>
+and <a href="https://doi.org/10.1186/s12859-016-0884-1">publication</a>.</p>
+</div>
+<div id="a-primer-on-terminology-existing-methods-statistical-theory" class="section level2">
+<h2>A primer on terminology, existing methods &amp; statistical theory</h2>
+<p><strong>Gene sets, pathways &amp; regulatory networks</strong></p>
+<p>Gene sets are simple lists of usually functionally related genes without further
+specification of relationships between genes.</p>
+<p>Pathways can be interpreted as specific gene sets, typically representing a
+group of genes that
+work together in a biological process. Pathways are commonly divided in
+metabolic and signaling pathways.
+Metabolic pathways such as glycolysis represent biochemical substrate conversions
+by specific enzymes. Signaling pathways such as the MAPK signaling pathway describe
+signal transduction cascades from receptor proteins to transcription factors,
+resulting in activation or inhibition of specific target genes.</p>
+<p>Gene regulatory networks describe the interplay and effects of regulatory
+factors (such as transcription factors and microRNAs) on the expression of their
+target genes.</p>
+<p><strong>Resources</strong></p>
+<p><a href="http://www.geneontology.org">GO</a> and <a href="http://www.genome.jp/kegg">KEGG</a>
+annotations are most frequently used for the enrichment analysis of
+functional gene sets. Despite an increasing number of gene set and pathway
+databases, they are typically the first choice due to their long-standing
+curation and availability for a wide range of species.</p>
+<p><em>GO</em>: The Gene Ontology (GO) consists of three major sub-ontologies that classify
+gene products according to molecular function (MF), biological process (BP) and
+cellular component (CC). Each ontology consists of GO terms that define MFs, BPs
+or CCs to which specific genes are annotated. The terms are organized in a
+directed acyclic graph, where edges between the terms represent
+relationships of different types. They relate the terms according to a parent-child
+scheme, i.e. parent terms denote more general entities, whereas child terms represent
+more specific entities.</p>
+<p><em>KEGG</em>: The Kyoto Encyclopedia of Genes and Genomes (KEGG) is a collection of
+manually drawn pathway maps representing molecular interaction and reaction networks.
+These pathways cover a wide range of biochemical processes that can be divided in
+7 broad categories: metabolism, genetic and environmental information processing,
+cellular processes, organismal systems, human diseases, and drug development.
+Metabolism and drug development pathways differ from pathways of the other 5
+categories by illustrating reactions between chemical compounds.
+Pathways of the other 5 categories illustrate molecular interactions between
+genes and gene products.</p>
+<p><strong>Gene set analysis vs. gene set enrichment analysis</strong></p>
+<p>The two predominantly used enrichment methods are:</p>
+<ul>
+<li>Overrepresentation analysis (ORA), testing whether a gene set contains
+disproportional many genes of significant expression change, based on the
+procedure outlined in the first section</li>
+<li>Gene set enrichment analysis (GSEA), testing whether genes of a gene set
+accumulate at the top or bottom of the full gene vector ordered by direction
+and magnitude of expression change
+<a href="https://doi.org/10.1073/pnas.0506580102">Subramanian et al., 2005</a></li>
+</ul>
+<p>However, the term <em>gene set enrichment analysis</em> nowadays subsumes a general
+strategy implemented by a wide range of methods
+<a href="https://doi.org/10.1093/nar/gkn923">Huang et al., 2009</a>.
+Those methods have in common the same goal, although approach and statistical
+model can vary substantially
+<a href="https://doi.org/10.1093/bioinformatics/btm051">Goeman and Buehlmann, 2007</a>,
+<a href="https://doi.org/10.1371/journal.pcbi.1002375">Khatri et al., 2012</a>.</p>
+<p>To better distinguish from the specific method, some authors use the term
+<em>gene set analysis</em> to denote the general strategy.
+However, there is also a specific method from
+<a href="https://doi.org/10.1214/07-AOAS101">Efron and Tibshirani, 2007</a> of this name.</p>
+<p><strong>Underlying null: competitive vs. self-contained</strong></p>
+<p><a href="https://doi.org/10.1093/bioinformatics/btm051">Goeman and Buehlmann, 2007</a>
+classified existing enrichment methods into <em>competitive</em> and <em>self-contained</em>
+based on the underlying null hypothesis.</p>
+<ul>
+<li><em>Competitive</em> null hypothesis: the genes in the set of interest are at most as
+often DE as the genes not in the set,</li>
+<li><em>Self-contained</em> null hypothesis: no genes in the set of interest are DE.</li>
+</ul>
+<p>Although the authors argue that a self-contained null is closer to the actual
+question of interest, the vast majority of enrichment methods is competitive.</p>
+<p>Goeman and Buehlmann further raise several critical issues concerning the 2x2 ORA:</p>
+<ul>
+<li>rather arbitrary classification of genes in DE / not DE</li>
+<li>based on gene sampling, although sampling of subjects is appropriate</li>
+<li>unrealistic independence assumption between genes, resulting in highly
+anti-conservative <em>p</em>-values</li>
+</ul>
+<p>With regard to these statistical concerns, GSEA is considered superior:</p>
+<ul>
+<li>takes all measured genes into account</li>
+<li>subject sampling via permutation of class labels<br />
+</li>
+<li>the incorporated permutation procedure implicitly accounts for correlations
+between genes</li>
+</ul>
+<p>However, the simplicity and general applicability of ORA is unmet by subsequent
+methods improving on these issues. For instance, GSEA requires the expression data
+as input, which is not available for gene lists derived from other experiment types.
+On the other hand, the involved sample permutation procedure has been proven
+inaccurate and time-consuming
+<a href="https://doi.org/10.1214/07-AOAS101">Efron and Tibshirani, 2007</a>,
+<a href="https://doi.org/10.2202/1544-6115.1585">Phipson and Smyth, 2010</a>,
+<a href="https://doi.org/10.1186/s12859-015-0571-7">Larson and Owen, 2015</a>.</p>
+<p><strong>Generations: ora, fcs &amp; topology-based</strong></p>
+<p><a href="https://doi.org/10.1371/journal.pcbi.1002375">Khatri et al., 2012</a> have taken a
+slightly different approach by classifying methods along the timeline of
+development into three generations:</p>
+<ol style="list-style-type: decimal">
+<li>Generation: ORA methods based on the 2x2 contingency table test,</li>
+<li>Generation: functional class scoring (FCS) methods such as GSEA, which compute
+gene set (= functional class) scores by summarizing per-gene DE statistics,</li>
+<li>Generation: topology-based methods, explicitly taking into account interactions
+between genes as defined in signaling pathways and gene regulatory networks
+(<a href="https://doi.org/10.1093/bioinformatics/btr228">Geistlinger et al., 2011</a> for an example).</li>
+</ol>
+<p>Although topology-based (also: network-based) methods appear to be most realistic,
+their straightforward application can be impaired by features that are not-detectable
+on the transcriptional level (such as protein-protein interactions) and insufficient network knowledge
+<a href="https://doi.org/10.1093/nar/gkt631">Geistlinger et al., 2013</a>,
+<a href="https://doi.org/10.1186/s12859-015-0751-5">Bayerlova et al., 2015</a>.</p>
+<p>Given the individual benefits and limitations of existing methods,
+cautious interpretation of results is required to derive valid conclusions.
+Whereas no single method is best suited for all application scenarios, applying
+multiple methods can be beneficial.
+This has been shown to filter out spurious hits of individual methods, thereby
+reducing the outcome to gene sets accumulating evidence from different methods
+<a href="https://doi.org/10.1186/s12859-016-0884-1">Geistlinger et al., 2016</a>,
+<a href="https://doi.org/10.1093/bioinformatics/btw623">Alhamdoosh et al., 2017</a>.</p>
+</div>
+<div id="data-types" class="section level2">
+<h2>Data types</h2>
+<p>Although RNA-seq (read count data) has become the <em>de facto</em> standard for
+transcriptomic profiling, it is important to know that many methods for
+differential expression and gene set enrichment analysis have been originally
+developed for microarray data (intensity measurements).</p>
+<p>However, differences in data distribution assumptions (microarray: quasi-normal,
+RNA-seq: negative binomial) made adaptations in differential expression analysis
+and, to some extent, also in gene set enrichment analysis necessary.</p>
+<p>Thus, we consider two example datasets - a microarray and a RNA-seq dataset,
+and discuss similarities and differences of the respective analysis steps.</p>
+<p>For microarray data, we consider expression measurements of patients with acute
+lymphoblastic leukemia
+<a href="https://doi.org/10.1182/blood-2003-09-3243">Chiaretti et al., 2004</a>. A
+frequent chromosomal defect found among these patients is a translocation, in
+which parts of chromosome 9 and 22 swap places. This results in the oncogenic
+fusion gene BCR/ABL created by positioning the ABL1 gene on chromosome 9 to a
+part of the BCR gene on chromosome 22.</p>
+<p>We load the
+<a href="http://bioconductor.org/packages/ALL">ALL</a>
+dataset</p>
+<pre class="r"><code>library(ALL)
+data(ALL)</code></pre>
+<p>and select B-cell ALL patients with and without the BCR/ABL fusion, as described previously
+<a href="https://www.bioconductor.org/help/publications/books/bioinformatics-and-computational-biology-solutions">Gentleman et al., 2005</a>.</p>
+<pre class="r"><code>ind.bs &lt;- grep(&quot;^B&quot;, ALL$BT)
+ind.mut &lt;- which(ALL$mol.biol %in% c(&quot;BCR/ABL&quot;, &quot;NEG&quot;))
+sset &lt;- intersect(ind.bs, ind.mut)
+all.eset &lt;- ALL[, sset]</code></pre>
+<p>We can now access the expression values, which are intensity measurements
+on a log-scale for 12,625 probes (rows) across 79 patients (columns).</p>
+<pre class="r"><code>dim(all.eset)</code></pre>
+<pre><code>## Features  Samples 
+##    12625       79</code></pre>
+<pre class="r"><code>exprs(all.eset)[1:4,1:4]</code></pre>
+<pre><code>##              01005    01010    03002    04007
+## 1000_at   7.597323 7.479445 7.567593 7.905312
+## 1001_at   5.046194 4.932537 4.799294 4.844565
+## 1002_f_at 3.900466 4.208155 3.886169 3.416923
+## 1003_s_at 5.903856 6.169024 5.860459 5.687997</code></pre>
+<p>As we often have more than one probe per gene, we compute gene expression values
+as the average of the corresponding probe values.</p>
+<pre class="r"><code>allSE &lt;- probe2gene(all.eset) </code></pre>
+<pre><code>## Loading required package: hgu95av2.db</code></pre>
+<pre><code>## Loading required package: AnnotationDbi</code></pre>
+<pre><code>## Loading required package: org.Hs.eg.db</code></pre>
+<pre><code>## </code></pre>
+<pre><code>## </code></pre>
+<pre><code>## Encountered 662 from.IDs with &gt;1 corresponding to.ID</code></pre>
+<pre><code>## (the first to.ID was chosen for each of them)</code></pre>
+<pre class="r"><code>head(names(allSE))</code></pre>
+<pre><code>## [1] &quot;5595&quot; &quot;7075&quot; &quot;1557&quot; &quot;643&quot;  &quot;1843&quot; &quot;4319&quot;</code></pre>
+<p>For RNA-seq data, we consider transcriptome profiles of four primary human
+airway smooth muscle cell lines in two conditions: control and treatment with
+dexamethasone
+<a href="https://doi.org/10.1371/journal.pone.0099625">Himes et al., 2014</a>.</p>
+<p>We load the
+<a href="http://bioconductor.org/packages/airway">airway</a>
+dataset</p>
+<pre class="r"><code>library(airway)
+data(airway)</code></pre>
+<p>For further analysis, we only keep genes that are annotated to an ENSEMBL gene ID.</p>
+<pre class="r"><code>airSE &lt;- airway[grep(&quot;^ENSG&quot;, names(airway)), ]
+dim(airSE)</code></pre>
+<pre><code>## [1] 63677     8</code></pre>
+<pre class="r"><code>assay(airSE)[1:4,1:4]</code></pre>
+<pre><code>##                 SRR1039508 SRR1039509 SRR1039512 SRR1039513
+## ENSG00000000003        679        448        873        408
+## ENSG00000000005          0          0          0          0
+## ENSG00000000419        467        515        621        365
+## ENSG00000000457        260        211        263        164</code></pre>
+</div>
+<div id="differential-expression-analysis" class="section level2">
+<h2>Differential expression analysis</h2>
+<p>Normalization of high-throughput expression data is essential to make results
+within and between experiments comparable. Microarray (intensity measurements)
+and RNA-seq (read counts) data typically show distinct features that need to be
+normalized for. As this is beyond the scope of this workshop, we refer to
+<a href="http://bioconductor.org/packages/limma">limma</a>
+for microarray normalization and
+<a href="http://bioconductor.org/packages/EDASeq">EDASeq</a>
+for RNA-seq normalization. See also <code>EnrichmentBrowser::normalize</code>, which wraps
+commonly used functionality for normalization.</p>
+<p>The EnrichmentBrowser incorporates established functionality from the
+<a href="http://bioconductor.org/packages/limma">limma</a>
+package for differential expression analysis.
+This involves the <code>voom</code> transformation when applied to RNA-seq data.
+Alternatively, differential expression analysis for RNA-seq data can also be
+carried out based on the negative binomial distribution with
+<a href="http://bioconductor.org/packages/edgeR">edgeR</a>
+and
+<a href="http://bioconductor.org/packages/DESeq2">DESeq2</a>.</p>
+<p>This can be performed using the function <code>EnrichmentBrowser::deAna</code>
+and assumes some standardized variable names:</p>
+<ul>
+<li><strong>GROUP</strong> defines the sample groups being contrasted,</li>
+<li><strong>BLOCK</strong> defines paired samples or sample blocks, as e.g. for batch effects.</li>
+</ul>
+<p>For more information on experimental design, see the
+<a href="https://www.bioconductor.org/packages/devel/bioc/vignettes/limma/inst/doc/usersguide.pdf">limma user’s guide</a>,
+chapter 9.</p>
+<p>For the ALL dataset, the <strong>GROUP</strong> variable indicates whether the BCR-ABL gene
+fusion is present (1) or not (0).</p>
+<pre class="r"><code>allSE$GROUP &lt;- ifelse(allSE$mol.biol == &quot;BCR/ABL&quot;, 1, 0)
+table(allSE$GROUP)</code></pre>
+<pre><code>## 
+##  0  1 
+## 42 37</code></pre>
+<p>For the airway dataset, it indicates whether the cell lines have been treated
+with dexamethasone (1) or not (0).</p>
+<pre class="r"><code>airSE$GROUP &lt;- ifelse(colData(airway)$dex == &quot;trt&quot;, 1, 0)
+table(airSE$GROUP)</code></pre>
+<pre><code>## 
+## 0 1 
+## 4 4</code></pre>
+<p>Paired samples, or in general sample batches/blocks, can be defined via a
+<code>BLOCK</code> column in the <code>colData</code> slot. For the airway dataset, the sample blocks
+correspond to the four different cell lines.</p>
+<pre class="r"><code>airSE$BLOCK &lt;- airway$cell
+table(airSE$BLOCK)</code></pre>
+<pre><code>## 
+## N052611 N061011 N080611  N61311 
+##       2       2       2       2</code></pre>
+<p>For microarray data, the <code>EnrichmentBrowser::deAna</code> function carries out
+differential expression analysis based on functionality from the
+<em>limma</em> package. Resulting log2 fold changes and <em>t</em>-test derived
+<em>p</em>-values for each gene are appended to the <code>rowData</code> slot.</p>
+<pre class="r"><code>allSE &lt;- deAna(allSE)
+rowData(allSE, use.names=TRUE)</code></pre>
+<pre><code>## DataFrame with 9010 rows and 4 columns
+##                        FC         limma.STAT               PVAL
+##                 &lt;numeric&gt;          &lt;numeric&gt;          &lt;numeric&gt;
+## 5595   0.0429698599842595  0.734679177472013  0.464684829972912
+## 7075   0.0320835027449625    0.4546910829318  0.650563967213993
+## 1557  -0.0439401425131442  -1.06578261967549  0.289730646214447
+## 643   -0.0277543539240438 -0.567394394416651  0.572036410363786
+## 1843   -0.427302534257363  -1.75050227190017 0.0838686341387849
+## ...                   ...                ...                ...
+## 6300   -0.026651766164237 -0.608608859328046  0.544509439402467
+## 7297   -0.124257678078831  -1.11279493778184   0.26913194646344
+## 2246   0.0522428857778935   1.27408420746691  0.206325553263504
+## 7850 -0.00908229596065303 -0.102406339091096  0.918690625240937
+## 1593 -0.00747713820802068 -0.145650256847251  0.884564163607577
+##               ADJ.PVAL
+##              &lt;numeric&gt;
+## 5595 0.899246817310775
+## 7075 0.949001013642671
+## 1557 0.818330132411339
+## 643  0.929148567589577
+## 1843 0.566034751753148
+## ...                ...
+## 6300 0.922828548631225
+## 7297 0.804578494190681
+## 2246 0.748021044717352
+## 7850 0.991826450687159
+## 1593 0.989532971314233</code></pre>
+<p>Nominal <em>p</em>-values are already corrected for multiple testing (<code>ADJ.PVAL</code>)
+using the method from Benjamini and Hochberg implemented in <code>stats::p.adjust</code>.</p>
+<p>For RNA-seq data, the <code>deAna</code> function can be used to carry out differential
+expression analysis between the two groups either based on functionality from
+<em>limma</em> (that includes the <code>voom</code> transformation), or
+alternatively, the frequently used <em>edgeR</em> or <em>DESeq2</em>
+package. Here, we use the analysis based on <em>edgeR</em>.</p>
+<pre class="r"><code>airSE &lt;- deAna(airSE, de.method=&quot;edgeR&quot;)</code></pre>
+<pre><code>## Excluding 49453 genes not satisfying min.cpm threshold</code></pre>
+<pre class="r"><code>rowData(airSE, use.names=TRUE)</code></pre>
+<pre><code>## DataFrame with 14224 rows and 4 columns
+##                                  FC          edgeR.STAT
+##                           &lt;numeric&gt;           &lt;numeric&gt;
+## ENSG00000000003  -0.400831866750168    34.0274066005774
+## ENSG00000000419   0.187085102783581    6.04980215402188
+## ENSG00000000457  0.0184725952974607  0.0381476546948963
+## ENSG00000000460  -0.136734267771027   0.475212812615995
+## ENSG00000000971   0.406378441992467    27.8716659010984
+## ...                             ...                 ...
+## ENSG00000273329  -0.219214650347431    1.43041469563247
+## ENSG00000273344  0.0193231195014681 0.00903927021496535
+## ENSG00000273373 -0.0554735206458293  0.0729809190374613
+## ENSG00000273382  -0.887239966221601    9.01498059318501
+## ENSG00000273486  -0.113268125908012    0.17843733094296
+##                                 PVAL            ADJ.PVAL
+##                            &lt;numeric&gt;           &lt;numeric&gt;
+## ENSG00000000003 0.000216432282687365 0.00210677511808673
+## ENSG00000000419   0.0352937489311271  0.0887742325015654
+## ENSG00000000457     0.84933380821247    0.90250441416511
+## ENSG00000000460    0.507377185432279   0.633532642632777
+## ENSG00000000971 0.000450371265294358 0.00358081658890271
+## ...                              ...                 ...
+## ENSG00000273329    0.261202451389662   0.394824061911937
+## ENSG00000273344    0.926290333383001   0.952403766231011
+## ENSG00000273373     0.79292502418718   0.862143826940717
+## ENSG00000273382   0.0143161906210688  0.0452317848498629
+## ENSG00000273486    0.682286869640591   0.778386596888113</code></pre>
+<p><em>Exercise:</em> Compare the number of differentially expressed genes as obtained on the <code>airSE</code> with <code>limma/voom</code>, <code>edgeR</code>, and <code>DESeq2</code>.</p>
+</div>
+<div id="gene-sets" class="section level2">
+<h2>Gene sets</h2>
+<p>We are now interested in whether pre-defined sets of genes that are known to
+work together, e.g. as defined in the <a href="http://www.geneontology.org">Gene Ontology</a>
+or the <a href="http://www.genome.jp/kegg">KEGG</a> pathway annotation, are coordinately
+differentially expressed.</p>
+<p>The function <code>getGenesets</code> can be used to download gene sets from databases such
+as GO and KEGG.
+Here, we use the function to download all KEGG pathways for a chosen organism
+(here: ) as gene sets.</p>
+<pre class="r"><code>kegg.gs &lt;- getGenesets(org=&quot;hsa&quot;, db=&quot;kegg&quot;)</code></pre>
+<p>Analogously, the function <code>getGenesets</code> can be used to retrieve GO terms of a
+selected ontology (here: biological process, BP) as defined in the <em>GO.db</em>
+annotation package.</p>
+<pre class="r"><code>go.gs &lt;- getGenesets(org=&quot;hsa&quot;, db=&quot;go&quot;, go.onto=&quot;BP&quot;, go.mode=&quot;GO.db&quot;)</code></pre>
+<pre><code>## </code></pre>
+<p>If provided a file, the function <code>getGenesets</code> parses user-defined gene sets
+from GMT file format.
+Here, we use this functionality for reading a list of already downloaded
+KEGG gene sets for <em>Homo sapiens</em> containing NCBI Entrez Gene IDs.</p>
+<pre class="r"><code>data.dir &lt;- system.file(&quot;extdata&quot;, package=&quot;EnrichmentBrowser&quot;)
+gmt.file &lt;- file.path(data.dir, &quot;hsa_kegg_gs.gmt&quot;)
+hsa.gs &lt;- getGenesets(gmt.file)
+hsa.gs[1:2]</code></pre>
+<pre><code>## $hsa05416_Viral_myocarditis
+##  [1] &quot;100509457&quot; &quot;101060835&quot; &quot;1525&quot;      &quot;1604&quot;      &quot;1605&quot;     
+##  [6] &quot;1756&quot;      &quot;1981&quot;      &quot;1982&quot;      &quot;25&quot;        &quot;2534&quot;     
+## [11] &quot;27&quot;        &quot;3105&quot;      &quot;3106&quot;      &quot;3107&quot;      &quot;3108&quot;     
+## [16] &quot;3109&quot;      &quot;3111&quot;      &quot;3112&quot;      &quot;3113&quot;      &quot;3115&quot;     
+## [21] &quot;3117&quot;      &quot;3118&quot;      &quot;3119&quot;      &quot;3122&quot;      &quot;3123&quot;     
+## [26] &quot;3125&quot;      &quot;3126&quot;      &quot;3127&quot;      &quot;3133&quot;      &quot;3134&quot;     
+## [31] &quot;3135&quot;      &quot;3383&quot;      &quot;3683&quot;      &quot;3689&quot;      &quot;3908&quot;     
+## [36] &quot;4624&quot;      &quot;4625&quot;      &quot;54205&quot;     &quot;5551&quot;      &quot;5879&quot;     
+## [41] &quot;5880&quot;      &quot;5881&quot;      &quot;595&quot;       &quot;60&quot;        &quot;637&quot;      
+## [46] &quot;6442&quot;      &quot;6443&quot;      &quot;6444&quot;      &quot;6445&quot;      &quot;71&quot;       
+## [51] &quot;836&quot;       &quot;841&quot;       &quot;842&quot;       &quot;857&quot;       &quot;8672&quot;     
+## [56] &quot;940&quot;       &quot;941&quot;       &quot;942&quot;       &quot;958&quot;       &quot;959&quot;      
+## 
+## $`hsa04622_RIG-I-like_receptor_signaling_pathway`
+##  [1] &quot;10010&quot;  &quot;1147&quot;   &quot;1432&quot;   &quot;1540&quot;   &quot;1654&quot;   &quot;23586&quot;  &quot;26007&quot; 
+##  [8] &quot;29110&quot;  &quot;338376&quot; &quot;340061&quot; &quot;3439&quot;   &quot;3440&quot;   &quot;3441&quot;   &quot;3442&quot;  
+## [15] &quot;3443&quot;   &quot;3444&quot;   &quot;3445&quot;   &quot;3446&quot;   &quot;3447&quot;   &quot;3448&quot;   &quot;3449&quot;  
+## [22] &quot;3451&quot;   &quot;3452&quot;   &quot;3456&quot;   &quot;3467&quot;   &quot;3551&quot;   &quot;3576&quot;   &quot;3592&quot;  
+## [29] &quot;3593&quot;   &quot;3627&quot;   &quot;3661&quot;   &quot;3665&quot;   &quot;4214&quot;   &quot;4790&quot;   &quot;4792&quot;  
+## [36] &quot;4793&quot;   &quot;5300&quot;   &quot;54941&quot;  &quot;55593&quot;  &quot;5599&quot;   &quot;5600&quot;   &quot;5601&quot;  
+## [43] &quot;5602&quot;   &quot;5603&quot;   &quot;56832&quot;  &quot;57506&quot;  &quot;5970&quot;   &quot;6300&quot;   &quot;64135&quot; 
+## [50] &quot;64343&quot;  &quot;6885&quot;   &quot;7124&quot;   &quot;7186&quot;   &quot;7187&quot;   &quot;7189&quot;   &quot;7706&quot;  
+## [57] &quot;79132&quot;  &quot;79671&quot;  &quot;80143&quot;  &quot;841&quot;    &quot;843&quot;    &quot;8517&quot;   &quot;8717&quot;  
+## [64] &quot;8737&quot;   &quot;8772&quot;   &quot;9140&quot;   &quot;9474&quot;   &quot;9636&quot;   &quot;9641&quot;   &quot;9755&quot;</code></pre>
+<pre class="r"><code>hsa.gs[1:2]</code></pre>
+<pre><code>## $hsa05416_Viral_myocarditis
+##  [1] &quot;100509457&quot; &quot;101060835&quot; &quot;1525&quot;      &quot;1604&quot;      &quot;1605&quot;     
+##  [6] &quot;1756&quot;      &quot;1981&quot;      &quot;1982&quot;      &quot;25&quot;        &quot;2534&quot;     
+## [11] &quot;27&quot;        &quot;3105&quot;      &quot;3106&quot;      &quot;3107&quot;      &quot;3108&quot;     
+## [16] &quot;3109&quot;      &quot;3111&quot;      &quot;3112&quot;      &quot;3113&quot;      &quot;3115&quot;     
+## [21] &quot;3117&quot;      &quot;3118&quot;      &quot;3119&quot;      &quot;3122&quot;      &quot;3123&quot;     
+## [26] &quot;3125&quot;      &quot;3126&quot;      &quot;3127&quot;      &quot;3133&quot;      &quot;3134&quot;     
+## [31] &quot;3135&quot;      &quot;3383&quot;      &quot;3683&quot;      &quot;3689&quot;      &quot;3908&quot;     
+## [36] &quot;4624&quot;      &quot;4625&quot;      &quot;54205&quot;     &quot;5551&quot;      &quot;5879&quot;     
+## [41] &quot;5880&quot;      &quot;5881&quot;      &quot;595&quot;       &quot;60&quot;        &quot;637&quot;      
+## [46] &quot;6442&quot;      &quot;6443&quot;      &quot;6444&quot;      &quot;6445&quot;      &quot;71&quot;       
+## [51] &quot;836&quot;       &quot;841&quot;       &quot;842&quot;       &quot;857&quot;       &quot;8672&quot;     
+## [56] &quot;940&quot;       &quot;941&quot;       &quot;942&quot;       &quot;958&quot;       &quot;959&quot;      
+## 
+## $`hsa04622_RIG-I-like_receptor_signaling_pathway`
+##  [1] &quot;10010&quot;  &quot;1147&quot;   &quot;1432&quot;   &quot;1540&quot;   &quot;1654&quot;   &quot;23586&quot;  &quot;26007&quot; 
+##  [8] &quot;29110&quot;  &quot;338376&quot; &quot;340061&quot; &quot;3439&quot;   &quot;3440&quot;   &quot;3441&quot;   &quot;3442&quot;  
+## [15] &quot;3443&quot;   &quot;3444&quot;   &quot;3445&quot;   &quot;3446&quot;   &quot;3447&quot;   &quot;3448&quot;   &quot;3449&quot;  
+## [22] &quot;3451&quot;   &quot;3452&quot;   &quot;3456&quot;   &quot;3467&quot;   &quot;3551&quot;   &quot;3576&quot;   &quot;3592&quot;  
+## [29] &quot;3593&quot;   &quot;3627&quot;   &quot;3661&quot;   &quot;3665&quot;   &quot;4214&quot;   &quot;4790&quot;   &quot;4792&quot;  
+## [36] &quot;4793&quot;   &quot;5300&quot;   &quot;54941&quot;  &quot;55593&quot;  &quot;5599&quot;   &quot;5600&quot;   &quot;5601&quot;  
+## [43] &quot;5602&quot;   &quot;5603&quot;   &quot;56832&quot;  &quot;57506&quot;  &quot;5970&quot;   &quot;6300&quot;   &quot;64135&quot; 
+## [50] &quot;64343&quot;  &quot;6885&quot;   &quot;7124&quot;   &quot;7186&quot;   &quot;7187&quot;   &quot;7189&quot;   &quot;7706&quot;  
+## [57] &quot;79132&quot;  &quot;79671&quot;  &quot;80143&quot;  &quot;841&quot;    &quot;843&quot;    &quot;8517&quot;   &quot;8717&quot;  
+## [64] &quot;8737&quot;   &quot;8772&quot;   &quot;9140&quot;   &quot;9474&quot;   &quot;9636&quot;   &quot;9641&quot;   &quot;9755&quot;</code></pre>
+<p>See also the <a href="http://software.broadinstitute.org/gsea/msigdb">MSigDb</a> for
+additional gene set collections.</p>
+</div>
+<div id="gokegg-overrepresentation-analysis" class="section level2">
+<h2>GO/KEGG overrepresentation analysis</h2>
+<p>A variety of gene set analysis methods have been proposed
+<a href="https://doi.org/10.1371/journal.pcbi.1002375">Khatri et al., 2012</a>.
+The most basic, yet frequently used, method is the over-representation analysis
+(ORA) with gene sets defined according to GO or KEGG.
+As outlined in the first section, ORA tests the overlap between DE genes
+(typically DE <em>p</em>-value &lt; 0.05) and genes in a gene set based on the
+hypergeometric distribution.
+Here, we choose a significance level <span class="math inline"><em>α</em> = 0.2</span> for demonstration.</p>
+<pre class="r"><code>ora.all &lt;- sbea(method=&quot;ora&quot;, se=allSE, gs=hsa.gs, perm=0, alpha=0.2)
+gsRanking(ora.all)</code></pre>
+<pre><code>## DataFrame with 7 rows and 4 columns
+##                                                          GENE.SET
+##                                                       &lt;character&gt;
+## 1                hsa05202_Transcriptional_misregulation_in_cancer
+## 2 hsa05412_Arrhythmogenic_right_ventricular_cardiomyopathy_(ARVC)
+## 3                                                hsa05144_Malaria
+## 4                   hsa04670_Leukocyte_transendothelial_migration
+## 5                 hsa05100_Bacterial_invasion_of_epithelial_cells
+## 6                  hsa04622_RIG-I-like_receptor_signaling_pathway
+## 7                  hsa05130_Pathogenic_Escherichia_coli_infection
+##    NR.GENES NR.SIG.GENES      PVAL
+##   &lt;numeric&gt;    &lt;numeric&gt; &lt;numeric&gt;
+## 1       153           17    0.0351
+## 2        63            8    0.0717
+## 3        45            6    0.0932
+## 4        94           10     0.122
+## 5        64            7     0.162
+## 6        54            6     0.178
+## 7        43            5     0.184</code></pre>
+<p>Such a ranked list is the standard output of most existing enrichment tools.
+Using the <code>eaBrowse</code> function creates a HTML summary from which each
+gene set can be inspected in more detail.</p>
+<p>&lt;img src=“<a href="https://github.com/waldronlab/BrownCOBRE2018/blob/master/notebooks_day2/EnrichmentBrowserNavigation.png?raw=true" class="uri">https://github.com/waldronlab/BrownCOBRE2018/blob/master/notebooks_day2/EnrichmentBrowserNavigation.png?raw=true</a>”, alt=“EnrichmentBrowserNavigation image”, style=“width:600px”&gt;</p>
+<pre class="r"><code>eaBrowse(ora.all)</code></pre>
+<pre><code>## Creating gene report ...</code></pre>
+<pre><code>## Registered S3 method overwritten by 'GGally':
+##   method from   
+##   +.gg   ggplot2</code></pre>
+<pre><code>## </code></pre>
+<pre><code>## Registered S3 method overwritten by 'R.oo':
+##   method        from       
+##   throw.default R.methodsS3</code></pre>
+<pre><code>## Creating set view ...</code></pre>
+<pre><code>## Creating kegg view ...</code></pre>
+<pre><code>## Loading required package: pathview</code></pre>
+<pre><code>## Info: Downloading xml files for hsa05202, 1/1 pathways..</code></pre>
+<pre><code>## Info: Downloading png files for hsa05202, 1/1 pathways..</code></pre>
+<pre><code>## 'select()' returned 1:1 mapping between keys and columns</code></pre>
+<pre><code>## Info: Working in directory /home/rstudio/CollaborativeBookdown/bookdown_test/blogdown_site/content/page</code></pre>
+<pre><code>## Info: Writing image file hsa05202.kpath.png</code></pre>
+<pre><code>## Info: Downloading xml files for hsa05412, 1/1 pathways..</code></pre>
+<pre><code>## Info: Downloading png files for hsa05412, 1/1 pathways..</code></pre>
+<pre><code>## 'select()' returned 1:1 mapping between keys and columns</code></pre>
+<pre><code>## Info: Working in directory /home/rstudio/CollaborativeBookdown/bookdown_test/blogdown_site/content/page</code></pre>
+<pre><code>## Info: Writing image file hsa05412.kpath.png</code></pre>
+<pre><code>## Info: Downloading xml files for hsa05144, 1/1 pathways..</code></pre>
+<pre><code>## Info: Downloading png files for hsa05144, 1/1 pathways..</code></pre>
+<pre><code>## 'select()' returned 1:1 mapping between keys and columns</code></pre>
+<pre><code>## Info: Working in directory /home/rstudio/CollaborativeBookdown/bookdown_test/blogdown_site/content/page</code></pre>
+<pre><code>## Info: Writing image file hsa05144.kpath.png</code></pre>
+<pre><code>## Info: Downloading xml files for hsa04670, 1/1 pathways..</code></pre>
+<pre><code>## Info: Downloading png files for hsa04670, 1/1 pathways..</code></pre>
+<pre><code>## 'select()' returned 1:1 mapping between keys and columns</code></pre>
+<pre><code>## Info: Working in directory /home/rstudio/CollaborativeBookdown/bookdown_test/blogdown_site/content/page</code></pre>
+<pre><code>## Info: Writing image file hsa04670.kpath.png</code></pre>
+<pre><code>## Info: Downloading xml files for hsa05100, 1/1 pathways..</code></pre>
+<pre><code>## Info: Downloading png files for hsa05100, 1/1 pathways..</code></pre>
+<pre><code>## 'select()' returned 1:1 mapping between keys and columns</code></pre>
+<pre><code>## Info: Working in directory /home/rstudio/CollaborativeBookdown/bookdown_test/blogdown_site/content/page</code></pre>
+<pre><code>## Info: Writing image file hsa05100.kpath.png</code></pre>
+<pre><code>## Info: some node width is different from others, and hence adjusted!</code></pre>
+<pre><code>## Info: Downloading xml files for hsa04622, 1/1 pathways..</code></pre>
+<pre><code>## Info: Downloading png files for hsa04622, 1/1 pathways..</code></pre>
+<pre><code>## 'select()' returned 1:1 mapping between keys and columns</code></pre>
+<pre><code>## Info: Working in directory /home/rstudio/CollaborativeBookdown/bookdown_test/blogdown_site/content/page</code></pre>
+<pre><code>## Info: Writing image file hsa04622.kpath.png</code></pre>
+<pre><code>## Info: Downloading xml files for hsa05130, 1/1 pathways..</code></pre>
+<pre><code>## Info: Downloading png files for hsa05130, 1/1 pathways..</code></pre>
+<pre><code>## 'select()' returned 1:1 mapping between keys and columns</code></pre>
+<pre><code>## Info: Working in directory /home/rstudio/CollaborativeBookdown/bookdown_test/blogdown_site/content/page</code></pre>
+<pre><code>## Info: Writing image file hsa05130.kpath.png</code></pre>
+<p>The resulting summary page includes for each significant gene set</p>
+<ul>
+<li>a gene report, which lists all genes of a set along with fold change and DE
+<span class="math inline"><em>p</em></span>-value (click on links in column <code>NR.GENES</code>),</li>
+<li>interactive overview plots such as heatmap and volcano plot (column
+<code>SET.VIEW</code>, supports mouse-over and click-on),</li>
+<li>for KEGG pathways: highlighting of differentially expressed genes on the
+pathway maps (column <code>PATH.VIEW</code>, supports mouse-over and click-on).</li>
+</ul>
+<p>As ORA works on the list of DE genes and not the actual expression values, it
+can be straightforward applied to RNA-seq data. However, as the gene sets here
+contain NCBI Entrez gene IDs and the airway dataset contains ENSEMBL gene ids,
+we first map the airway dataset to Entrez IDs.</p>
+<pre class="r"><code>airSE &lt;- idMap(airSE, org=&quot;hsa&quot;, from=&quot;ENSEMBL&quot;, to=&quot;ENTREZID&quot;)</code></pre>
+<pre><code>## Encountered 78 from.IDs with &gt;1 corresponding to.ID</code></pre>
+<pre><code>## (the first to.ID was chosen for each of them)</code></pre>
+<pre><code>## Excluded 1718 from.IDs without a corresponding to.ID</code></pre>
+<pre><code>## Encountered 5 to.IDs with &gt;1 from.ID (the first from.ID was chosen for each of them)</code></pre>
+<pre class="r"><code>ora.air &lt;- sbea(method=&quot;ora&quot;, se=airSE, gs=hsa.gs, perm=0)
+gsRanking(ora.air)</code></pre>
+<pre><code>## DataFrame with 10 rows and 4 columns
+##                                                           GENE.SET
+##                                                        &lt;character&gt;
+## 1                                     hsa05206_MicroRNAs_in_cancer
+## 2                                                hsa05218_Melanoma
+## 3                                                  hsa05214_Glioma
+## 4                                             hsa05131_Shigellosis
+## 5                       hsa05410_Hypertrophic_cardiomyopathy_(HCM)
+## 6  hsa05412_Arrhythmogenic_right_ventricular_cardiomyopathy_(ARVC)
+## 7                  hsa05100_Bacterial_invasion_of_epithelial_cells
+## 8                    hsa04670_Leukocyte_transendothelial_migration
+## 9                          hsa04514_Cell_adhesion_molecules_(CAMs)
+## 10                                    hsa00910_Nitrogen_metabolism
+##     NR.GENES NR.SIG.GENES      PVAL
+##    &lt;numeric&gt;    &lt;numeric&gt; &lt;numeric&gt;
+## 1        123           69  0.000405
+## 2         51           33  0.000538
+## 3         50           31   0.00226
+## 4         53           31   0.00797
+## 5         54           31    0.0115
+## 6         49           28    0.0174
+## 7         62           34    0.0203
+## 8         66           35    0.0343
+## 9         62           33     0.037
+## 10         6            5    0.0477</code></pre>
+<p>Note #1: <a href="https://doi.org/10.1186/gb-2010-11-2-r14">Young et al., 2010</a>, have
+reported biased results for ORA on RNA-seq data due to over-detection of
+differential expression for long and highly expressed transcripts. The
+<a href="http://bioconductor.org/packages/goseq">goseq</a>
+package and <code>limma::goana</code> implement possibilities to adjust ORA for gene length
+and abundance bias.</p>
+<p>Note #2: Independent of the expression data type under investigation, overlap
+between gene sets can result in redundant findings. This is well-documented for
+GO (parent-child structure,
+<a href="https://doi.org/10.1038/nrg2363">Rhee et al., 2008</a>) and KEGG (pathway
+overlap/crosstalk,
+<a href="https://doi.org/10.1101/gr.153551.112">Donato et al., 2013</a>). The
+<a href="http://bioconductor.org/packages/topGO">topGO</a>
+package (explicitly designed for GO) and
+<a href="http://bioconductor.org/packages/mgsa">mgsa</a>
+(applicable to arbitrary gene set definitions) implement
+modifications of ORA to account for such redundancies.</p>
+</div>
+<div id="functional-class-scoring-permutation-testing" class="section level2">
+<h2>Functional class scoring &amp; permutation testing</h2>
+<p>A major limitation of ORA is that it restricts analysis to DE genes, excluding
+genes not satisfying the chosen significance threshold (typically the vast
+majority).</p>
+<p>This is resolved by gene set enrichment analysis (GSEA), which scores the
+tendency of gene set members to appear rather at the top or bottom of the
+ranked list of all measured genes
+<a href="https://doi.org/10.1073/pnas.0506580102">Subramanian et al., 2005</a>. The
+statistical significance of the enrichment score (ES) of a gene set is assessed
+via sample permutation, i.e. (1) sample labels (= group assignment) are
+shuffled, (2) per-gene DE statistics are recomputed, and (3) the enrichment
+score is recomputed. Repeating this procedure many times allows to determine
+the empirical distribution of the enrichment score and to compare the observed
+enrichment score against it. Here, we carry out GSEA with 1000 permutations.</p>
+<pre class="r"><code>gsea.all &lt;- sbea(method=&quot;gsea&quot;, se=allSE, gs=hsa.gs, perm=1000)  </code></pre>
+<pre><code>## Permutations: 1 -- 100</code></pre>
+<pre><code>## Permutations: 101 -- 200</code></pre>
+<pre><code>## Permutations: 201 -- 300</code></pre>
+<pre><code>## Permutations: 301 -- 400</code></pre>
+<pre><code>## Permutations: 401 -- 500</code></pre>
+<pre><code>## Permutations: 501 -- 600</code></pre>
+<pre><code>## Permutations: 601 -- 700</code></pre>
+<pre><code>## Permutations: 701 -- 800</code></pre>
+<pre><code>## Permutations: 801 -- 900</code></pre>
+<pre><code>## Permutations: 901 -- 1000</code></pre>
+<pre><code>## Processing ...</code></pre>
+<pre class="r"><code>gsRanking(gsea.all)</code></pre>
+<pre><code>## DataFrame with 19 rows and 4 columns
+##                                                            GENE.SET
+##                                                         &lt;character&gt;
+## 1   hsa05412_Arrhythmogenic_right_ventricular_cardiomyopathy_(ARVC)
+## 2                                        hsa04520_Adherens_junction
+## 3                  hsa05202_Transcriptional_misregulation_in_cancer
+## 4                                        hsa05416_Viral_myocarditis
+## 5                     hsa04670_Leukocyte_transendothelial_migration
+## ...                                                             ...
+## 15                     hsa04621_NOD-like_receptor_signaling_pathway
+## 16                         hsa05150_Staphylococcus_aureus_infection
+## 17                                             hsa05131_Shigellosis
+## 18                   hsa05130_Pathogenic_Escherichia_coli_infection
+## 19                                               hsa04210_Apoptosis
+##            ES       NES      PVAL
+##     &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+## 1       0.511      1.86         0
+## 2       0.488      1.73         0
+## 3        0.53      1.72         0
+## 4        0.63      1.89   0.00191
+## 5       0.499      1.79   0.00194
+## ...       ...       ...       ...
+## 15      0.633      1.56    0.0216
+## 16      0.576      1.69    0.0231
+## 17      0.479      1.52    0.0236
+## 18      0.486      1.52    0.0283
+## 19      0.424      1.42    0.0413</code></pre>
+<p>As GSEA’s permutation procedure involves re-computation of per-gene DE
+statistics, adaptations are necessary for RNA-seq. The EnrichmentBrowser
+implements an accordingly adapted version of GSEA, which allows incorporation
+of limma/voom, edgeR, or DESeq2 for repeated DE re-computation within GSEA.
+However, this is computationally intensive (for limma/voom the least, for
+DESeq2 the most). Note the relatively long running times for only 100
+permutations having used edgeR for DE analysis.</p>
+<pre class="r"><code>gsea.air &lt;- sbea(method=&quot;gsea&quot;, se=airSE, gs=hsa.gs, perm=100)  </code></pre>
+<pre><code>## 100 permutations completed</code></pre>
+<p>While it might be in some cases necessary to apply permutation-based GSEA for
+RNA-seq data, there are also alternatives avoiding permutation. Among them is
+ROtAtion gene Set Testing (ROAST), which uses rotation instead of permutation
+<a href="https://doi.org/10.1093/bioinformatics/btq401">Wu et al., 2010</a>.</p>
+<pre class="r"><code>roast.air &lt;- sbea(method=&quot;roast&quot;, se=airSE, gs=hsa.gs)
+gsRanking(roast.air)  </code></pre>
+<pre><code>## DataFrame with 28 rows and 4 columns
+##                                            GENE.SET  NR.GENES       DIR
+##                                         &lt;character&gt; &lt;numeric&gt; &lt;numeric&gt;
+## 1   hsa05100_Bacterial_invasion_of_epithelial_cells        62         1
+## 2                            hsa05134_Legionellosis        36         1
+## 3               hsa03420_Nucleotide_excision_repair        42        -1
+## 4                          hsa03030_DNA_replication        34        -1
+## 5     hsa04670_Leukocyte_transendothelial_migration        66         1
+## ...                                             ...       ...       ...
+## 24                  hsa04150_mTOR_signaling_pathway        50         1
+## 25          hsa04514_Cell_adhesion_molecules_(CAMs)        62        -1
+## 26                    hsa05217_Basal_cell_carcinoma        36        -1
+## 27                  hsa04068_FoxO_signaling_pathway       110         1
+## 28     hsa04621_NOD-like_receptor_signaling_pathway        41        -1
+##          PVAL
+##     &lt;numeric&gt;
+## 1       0.001
+## 2       0.001
+## 3       0.001
+## 4       0.001
+## 5       0.002
+## ...       ...
+## 24      0.022
+## 25      0.024
+## 26      0.024
+## 27      0.035
+## 28      0.043</code></pre>
+<p>A selection of additional methods is also available:</p>
+<pre class="r"><code>sbeaMethods()</code></pre>
+<pre><code>##  [1] &quot;ora&quot;        &quot;safe&quot;       &quot;gsea&quot;       &quot;gsa&quot;        &quot;padog&quot;     
+##  [6] &quot;globaltest&quot; &quot;roast&quot;      &quot;camera&quot;     &quot;gsva&quot;       &quot;samgs&quot;     
+## [11] &quot;ebm&quot;        &quot;mgsa&quot;</code></pre>
+<p><em>Exercise</em>: Carry out a GO overrepresentation analysis for the <code>allSE</code> and <code>airSE</code>. How many significant gene sets do you observe in each case?</p>
+</div>
+<div id="network-based-enrichment-analysis" class="section level2">
+<h2>Network-based enrichment analysis</h2>
+<p>Having found gene sets that show enrichment for differential expression,
+we are now interested whether these findings can be supported by known
+regulatory interactions.</p>
+<p>For example, we want to know whether transcription factors and their target
+genes are expressed in accordance to the connecting regulations
+(activation/inhibition).
+Such information is usually given in a gene regulatory network derived from
+specific experiments or compiled from the literature
+(<a href="https://doi.org/10.1093/nar/gkt631">Geistlinger et al., 2013</a> for an example).</p>
+<p>There are well-studied processes and organisms for which comprehensive and
+well-annotated regulatory networks are available, e.g. the
+<a href="http://regulondb.ccg.unam.mx">RegulonDB</a> for <em>E. coli</em> and
+<a href="http://www.yeastract.com">Yeastract</a> for <em>S. cerevisiae</em>.</p>
+<p>However, there are also cases where such a network is missing or at least
+incomplete.
+A basic workaround is to compile a network from regulations in pathway databases
+such as KEGG.</p>
+<pre class="r"><code>hsa.grn &lt;- compileGRN(org=&quot;hsa&quot;, db=&quot;kegg&quot;, kegg.native=TRUE)</code></pre>
+<pre><code>## download:</code></pre>
+<pre><code>## path:hsa00010</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00020</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00030</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00040</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00051</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00052</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00053</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00061</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00062</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00071</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00072</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00100</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00120</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00130</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00140</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00190</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00220</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00230</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00232</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00240</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00250</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00260</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00270</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00280</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00290</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00310</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00330</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00340</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00350</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00360</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00380</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00400</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00410</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00430</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00440</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00450</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00471</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00472</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00480</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00500</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00510</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00511</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00512</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00514</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00515</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00520</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00524</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00531</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00532</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00533</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00534</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00561</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00562</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00563</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00564</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00565</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00590</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00591</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00592</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00600</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00601</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00603</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00604</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00620</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00630</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00640</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00650</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00670</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00730</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00740</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00750</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00760</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00770</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00780</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00785</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00790</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00830</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00860</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00900</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00910</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00920</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00970</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00980</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00982</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa00983</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa01040</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa01100</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa01200</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa01210</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa01212</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa01230</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa01521</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa01522</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa01523</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa01524</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa02010</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03008</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03010</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03013</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03015</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03018</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03020</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03022</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03030</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03040</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03050</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03060</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03320</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03410</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03420</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03430</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03440</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03450</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa03460</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04010</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04012</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04014</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04015</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04020</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04022</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04024</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04060</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04061</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04062</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04064</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04066</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04068</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04070</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04071</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04072</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04080</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04110</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04114</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04115</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04120</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04122</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04130</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04136</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04137</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04140</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04141</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04142</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04144</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04145</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04146</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04150</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04151</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04152</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04210</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04211</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04213</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04215</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04216</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04217</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04218</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04260</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04261</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04270</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04310</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04330</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04340</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04350</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04360</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04370</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04371</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04380</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04390</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04392</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04510</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04512</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04514</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04520</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04530</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04540</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04550</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04610</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04611</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04612</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04614</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04620</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04621</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04622</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04623</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04625</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04630</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04640</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04650</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04657</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04658</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04659</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04660</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04662</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04664</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04666</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04668</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04670</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04672</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04710</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04713</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04714</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04720</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04721</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04722</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04723</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04724</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04725</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04726</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04727</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04728</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04730</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04740</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04742</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04744</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04750</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04810</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04910</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04911</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04912</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04913</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04914</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04915</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04916</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04917</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04918</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04919</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04920</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04921</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04922</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04923</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04924</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04925</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04926</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04927</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04928</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04930</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04931</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04932</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04933</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04934</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04940</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04950</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04960</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04961</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04962</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04964</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04966</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04970</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04971</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04972</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04973</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04974</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04975</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04976</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04977</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04978</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa04979</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05010</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05012</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05014</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05016</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05020</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05030</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05031</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05032</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05033</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05034</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05100</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05110</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05120</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05130</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05131</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05132</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05133</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05134</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05135</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05140</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05142</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05143</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05144</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05145</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05146</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05150</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05152</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05160</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05161</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05162</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05163</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05164</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05165</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05166</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05167</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05168</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05169</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05170</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05200</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05202</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05203</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05204</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05205</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05206</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05210</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05211</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05212</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05213</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05214</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05215</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05216</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05217</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05218</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05219</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05220</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05221</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05222</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05223</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05224</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05225</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05226</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05230</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05231</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05235</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05310</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05320</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05321</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05322</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05323</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05330</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05332</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05340</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05410</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05412</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05414</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05416</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre><code>## path:hsa05418</code></pre>
+<pre><code>## No encoding supplied: defaulting to UTF-8.</code></pre>
+<pre class="r"><code>head(hsa.grn)</code></pre>
+<pre><code>##      FROM   TO     TYPE
+## [1,] &quot;1950&quot; &quot;1956&quot; &quot;+&quot; 
+## [2,] &quot;1950&quot; &quot;2064&quot; &quot;+&quot; 
+## [3,] &quot;1950&quot; &quot;2065&quot; &quot;+&quot; 
+## [4,] &quot;7039&quot; &quot;1956&quot; &quot;+&quot; 
+## [5,] &quot;7039&quot; &quot;2064&quot; &quot;+&quot; 
+## [6,] &quot;7039&quot; &quot;2065&quot; &quot;+&quot;</code></pre>
+<p>Signaling pathway impact analysis (SPIA) is a network-based enrichment analysis
+method, which is explicitly designed for KEGG signaling pathways
+<a href="https://doi.org/%2010.1093/bioinformatics/btn577">Tarca et al., 2009</a>. The
+method evaluates whether expression changes are propagated across the pathway
+topology in combination with ORA.</p>
+<pre class="r"><code>spia.all &lt;- nbea(method=&quot;spia&quot;, se=allSE, gs=hsa.gs, grn=hsa.grn, alpha=0.2)</code></pre>
+<pre><code>## 
+## Done pathway 1 : RNA transport..
+## Done pathway 2 : RNA degradation..
+## Done pathway 3 : PPAR signaling pathway..
+## Done pathway 4 : Fanconi anemia pathway..
+## Done pathway 5 : MAPK signaling pathway..
+## Done pathway 6 : ErbB signaling pathway..
+## Done pathway 7 : Calcium signaling pathway..
+## Done pathway 8 : Cytokine-cytokine receptor int..
+## Done pathway 9 : Chemokine signaling pathway..
+## Done pathway 10 : NF-kappa B signaling pathway..
+## Done pathway 11 : Phosphatidylinositol signaling..
+## Done pathway 12 : Neuroactive ligand-receptor in..
+## Done pathway 13 : Cell cycle..
+## Done pathway 14 : Oocyte meiosis..
+## Done pathway 15 : p53 signaling pathway..
+## Done pathway 16 : Sulfur relay system..
+## Done pathway 17 : SNARE interactions in vesicula..
+## Done pathway 18 : Regulation of autophagy..
+## Done pathway 19 : Protein processing in endoplas..
+## Done pathway 20 : Lysosome..
+## Done pathway 21 : mTOR signaling pathway..
+## Done pathway 22 : Apoptosis..
+## Done pathway 23 : Vascular smooth muscle contrac..
+## Done pathway 24 : Wnt signaling pathway..
+## Done pathway 25 : Dorso-ventral axis formation..
+## Done pathway 26 : Notch signaling pathway..
+## Done pathway 27 : Hedgehog signaling pathway..
+## Done pathway 28 : TGF-beta signaling pathway..
+## Done pathway 29 : Axon guidance..
+## Done pathway 30 : VEGF signaling pathway..
+## Done pathway 31 : Osteoclast differentiation..
+## Done pathway 32 : Focal adhesion..
+## Done pathway 33 : ECM-receptor interaction..
+## Done pathway 34 : Cell adhesion molecules (CAMs)..
+## Done pathway 35 : Adherens junction..
+## Done pathway 36 : Tight junction..
+## Done pathway 37 : Gap junction..
+## Done pathway 38 : Complement and coagulation cas..
+## Done pathway 39 : Antigen processing and present..
+## Done pathway 40 : Toll-like receptor signaling p..
+## Done pathway 41 : NOD-like receptor signaling pa..
+## Done pathway 42 : RIG-I-like receptor signaling ..
+## Done pathway 43 : Cytosolic DNA-sensing pathway..
+## Done pathway 44 : Jak-STAT signaling pathway..
+## Done pathway 45 : Natural killer cell mediated c..
+## Done pathway 46 : T cell receptor signaling path..
+## Done pathway 47 : B cell receptor signaling path..
+## Done pathway 48 : Fc epsilon RI signaling pathwa..
+## Done pathway 49 : Fc gamma R-mediated phagocytos..
+## Done pathway 50 : Leukocyte transendothelial mig..
+## Done pathway 51 : Intestinal immune network for ..
+## Done pathway 52 : Circadian rhythm - mammal..
+## Done pathway 53 : Long-term potentiation..
+## Done pathway 54 : Neurotrophin signaling pathway..
+## Done pathway 55 : Retrograde endocannabinoid sig..
+## Done pathway 56 : Glutamatergic synapse..
+## Done pathway 57 : Cholinergic synapse..
+## Done pathway 58 : Serotonergic synapse..
+## Done pathway 59 : GABAergic synapse..
+## Done pathway 60 : Dopaminergic synapse..
+## Done pathway 61 : Long-term depression..
+## Done pathway 62 : Olfactory transduction..
+## Done pathway 63 : Taste transduction..
+## Done pathway 64 : Phototransduction..
+## Done pathway 65 : Regulation of actin cytoskelet..
+## Done pathway 66 : Insulin signaling pathway..
+## Done pathway 67 : GnRH signaling pathway..
+## Done pathway 68 : Progesterone-mediated oocyte m..
+## Done pathway 69 : Melanogenesis..
+## Done pathway 70 : Adipocytokine signaling pathwa..
+## Done pathway 71 : Type II diabetes mellitus..
+## Done pathway 72 : Type I diabetes mellitus..
+## Done pathway 73 : Maturity onset diabetes of the..
+## Done pathway 74 : Aldosterone-regulated sodium r..
+## Done pathway 75 : Endocrine and other factor-reg..
+## Done pathway 76 : Vasopressin-regulated water re..
+## Done pathway 77 : Salivary secretion..
+## Done pathway 78 : Gastric acid secretion..
+## Done pathway 79 : Pancreatic secretion..
+## Done pathway 80 : Carbohydrate digestion and abs..
+## Done pathway 81 : Bile secretion..
+## Done pathway 82 : Mineral absorption..
+## Done pathway 83 : Alzheimer's disease..
+## Done pathway 84 : Parkinson's disease..
+## Done pathway 85 : Amyotrophic lateral sclerosis ..
+## Done pathway 86 : Huntington's disease..
+## Done pathway 87 : Prion diseases..
+## Done pathway 88 : Cocaine addiction..
+## Done pathway 89 : Amphetamine addiction..
+## Done pathway 90 : Morphine addiction..
+## Done pathway 91 : Alcoholism..
+## Done pathway 92 : Bacterial invasion of epitheli..
+## Done pathway 93 : Vibrio cholerae infection..
+## Done pathway 94 : Epithelial cell signaling in H..
+## Done pathway 95 : Pathogenic Escherichia coli in..
+## Done pathway 96 : Shigellosis..
+## Done pathway 97 : Salmonella infection..
+## Done pathway 98 : Pertussis..
+## Done pathway 99 : Legionellosis..
+## Done pathway 100 : Leishmaniasis..
+## Done pathway 101 : Chagas disease (American trypa..
+## Done pathway 102 : African trypanosomiasis..
+## Done pathway 103 : Malaria..
+## Done pathway 104 : Toxoplasmosis..
+## Done pathway 105 : Amoebiasis..
+## Done pathway 106 : Staphylococcus aureus infectio..
+## Done pathway 107 : Tuberculosis..
+## Done pathway 108 : Hepatitis C..
+## Done pathway 109 : Measles..
+## Done pathway 110 : Influenza A..
+## Done pathway 111 : HTLV-I infection..
+## Done pathway 112 : Herpes simplex infection..
+## Done pathway 113 : Epstein-Barr virus infection..
+## Done pathway 114 : Pathways in cancer..
+## Done pathway 115 : Transcriptional misregulation ..
+## Done pathway 116 : Viral carcinogenesis..
+## Done pathway 117 : Colorectal cancer..
+## Done pathway 118 : Renal cell carcinoma..
+## Done pathway 119 : Pancreatic cancer..
+## Done pathway 120 : Endometrial cancer..
+## Done pathway 121 : Glioma..
+## Done pathway 122 : Prostate cancer..
+## Done pathway 123 : Thyroid cancer..
+## Done pathway 124 : Basal cell carcinoma..
+## Done pathway 125 : Melanoma..
+## Done pathway 126 : Bladder cancer..
+## Done pathway 127 : Chronic myeloid leukemia..
+## Done pathway 128 : Acute myeloid leukemia..
+## Done pathway 129 : Small cell lung cancer..
+## Done pathway 130 : Non-small cell lung cancer..
+## Done pathway 131 : Asthma..
+## Done pathway 132 : Autoimmune thyroid disease..
+## Done pathway 133 : Systemic lupus erythematosus..
+## Done pathway 134 : Rheumatoid arthritis..
+## Done pathway 135 : Allograft rejection..
+## Done pathway 136 : Graft-versus-host disease..
+## Done pathway 137 : Arrhythmogenic right ventricul..
+## Done pathway 138 : Dilated cardiomyopathy..
+## Done pathway 139 : Viral myocarditis..</code></pre>
+<pre><code>## Finished SPIA analysis</code></pre>
+<pre class="r"><code>gsRanking(spia.all)</code></pre>
+<pre><code>## DataFrame with 6 rows and 6 columns
+##                                           GENE.SET      SIZE       NDE
+##                                        &lt;character&gt; &lt;numeric&gt; &lt;numeric&gt;
+## 1    hsa04620_Toll-like_receptor_signaling_pathway        74         6
+## 2 hsa05202_Transcriptional_misregulation_in_cancer        89         9
+## 3              hsa04630_Jak-STAT_signaling_pathway        72         8
+## 4                       hsa05416_Viral_myocarditis        45         5
+## 5                       hsa05210_Colorectal_cancer        52         3
+## 6                 hsa05143_African_trypanosomiasis        22         4
+##       T.ACT    STATUS      PVAL
+##   &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+## 1      -3.7        -1    0.0417
+## 2    -0.209        -1    0.0679
+## 3     -1.06        -1    0.0919
+## 4      2.97         1     0.111
+## 5      1.77         1     0.172
+## 6     0.263         1     0.185</code></pre>
+<p>More generally applicable is gene graph enrichment analysis (GGEA), which
+evaluates consistency of interactions in a given gene regulatory network with
+the observed expression data
+<a href="https://doi.org/10.1093/bioinformatics/btr228">Geistlinger et al., 2011</a>.</p>
+<pre class="r"><code>ggea.all &lt;- nbea(method=&quot;ggea&quot;, se=allSE, gs=hsa.gs, grn=hsa.grn)
+gsRanking(ggea.all)</code></pre>
+<pre><code>## DataFrame with 8 rows and 5 columns
+##                                                            GENE.SET
+##                                                         &lt;character&gt;
+## 1                                        hsa05416_Viral_myocarditis
+## 2                                  hsa04390_Hippo_signaling_pathway
+## 3                                     hsa05217_Basal_cell_carcinoma
+## 4                               hsa04350_TGF-beta_signaling_pathway
+## 5 hsa04550_Signaling_pathways_regulating_pluripotency_of_stem_cells
+## 6                                hsa04910_Insulin_signaling_pathway
+## 7   hsa05412_Arrhythmogenic_right_ventricular_cardiomyopathy_(ARVC)
+## 8                                        hsa04520_Adherens_junction
+##     NR.RELS RAW.SCORE NORM.SCORE      PVAL
+##   &lt;numeric&gt; &lt;numeric&gt;  &lt;numeric&gt; &lt;numeric&gt;
+## 1         7       3.3      0.471  0.000999
+## 2        63        23      0.365     0.003
+## 3        18      6.92      0.385     0.013
+## 4        18      6.96      0.387     0.014
+## 5        36      13.1      0.363     0.025
+## 6        31      11.2       0.36     0.026
+## 7         4      1.75      0.437      0.03
+## 8        14      5.28      0.377     0.049</code></pre>
+<pre class="r"><code>nbeaMethods()</code></pre>
+<pre><code>## [1] &quot;ggea&quot;        &quot;spia&quot;        &quot;pathnet&quot;     &quot;degraph&quot;     &quot;ganpa&quot;      
+## [6] &quot;cepa&quot;        &quot;topologygsa&quot; &quot;netgsa&quot;</code></pre>
+<p>Note #1: As network-based enrichment methods typically do not involve sample
+permutation but rather network permutation,
+thus avoiding DE re-computation, they can likewise be applied to RNA-seq data.</p>
+<p>Note #2: Given the various enrichment methods with individual benefits and
+limitations, combining multiple methods can be beneficial, e.g. combined
+application of a set-based and a network-based method. This has been shown to
+filter out spurious hits of individual methods and to reduce the outcome to
+gene sets accumulating evidence from different methods
+<a href="https://doi.org/10.1186/s12859-016-0884-1">Geistlinger et al., 2016</a>,
+<a href="https://doi.org/10.1093/bioinformatics/btw623">Alhamdoosh et al., 2017</a>.</p>
+<p>The function <code>combResults</code> implements the straightforward combination of
+results, thereby facilitating seamless comparison of results across methods.
+For demonstration, we use the ORA and GSEA results for the ALL dataset from the
+previous section:</p>
+<pre class="r"><code>res.list &lt;- list(ora.all, gsea.all)
+comb.res &lt;- combResults(res.list)
+gsRanking(comb.res)</code></pre>
+<pre><code>## DataFrame with 20 rows and 6 columns
+##                                                            GENE.SET
+##                                                         &lt;character&gt;
+## 1                  hsa05202_Transcriptional_misregulation_in_cancer
+## 2   hsa05412_Arrhythmogenic_right_ventricular_cardiomyopathy_(ARVC)
+## 3                     hsa04670_Leukocyte_transendothelial_migration
+## 4                                        hsa04520_Adherens_junction
+## 5                   hsa05100_Bacterial_invasion_of_epithelial_cells
+## ...                                                             ...
+## 16                       hsa05410_Hypertrophic_cardiomyopathy_(HCM)
+## 17                              hsa04350_TGF-beta_signaling_pathway
+## 18                     hsa04621_NOD-like_receptor_signaling_pathway
+## 19                          hsa04514_Cell_adhesion_molecules_(CAMs)
+## 20                   hsa04622_RIG-I-like_receptor_signaling_pathway
+##      ORA.RANK GSEA.RANK MEAN.RANK  ORA.PVAL GSEA.PVAL
+##     &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;
+## 1         2.6       7.7       5.1    0.0351         0
+## 2         5.1       7.7       6.4    0.0717         0
+## 3        10.3      12.8      11.5     0.122   0.00194
+## 4        20.5       7.7      14.1     0.201         0
+## 5        12.8      28.2      20.5     0.162    0.0119
+## ...       ...       ...       ...       ...       ...
+## 16         41      51.3      46.2     0.403    0.0537
+## 17       38.5        59      48.7      0.39    0.0958
+## 18       61.5      38.5        50     0.631    0.0216
+## 19       69.2      33.3      51.3     0.649    0.0158
+## 20       15.4      87.2      51.3     0.178     0.355</code></pre>
+<p><em>Exercise:</em> Carry out <code>SPIA</code> and <code>GGEA</code> for the <code>airSE</code> and combine the results. How many gene sets are rendered significant by both methods?</p>
+</div>
+<div id="genomic-region-enrichment-analysis" class="section level2">
+<h2>Genomic region enrichment analysis</h2>
+<p>Microarrays and next-generation sequencing are also widely applied for
+large-scale detection of variable and regulatory genomic regions, e.g. single
+nucleotide polymorphisms, copy number variations, and transcription factor
+binding sites.</p>
+<p>&lt;img src=“<a href="https://github.com/waldronlab/BrownCOBRE2018/blob/master/notebooks_day2/ENCODE.png?raw=true" class="uri">https://github.com/waldronlab/BrownCOBRE2018/blob/master/notebooks_day2/ENCODE.png?raw=true</a>”, alt=“ENCODE image”, style=“width:600px”&gt;</p>
+<p>Such experimentally-derived genomic region sets are raising similar questions
+regarding functional enrichment as in gene expression data analysis.</p>
+<p>Of particular interest is thereby whether experimentally-derived regions
+overlap more (enrichment) or less (depletion) than expected by chance with
+regions representing known functional features such as genes or
+promoters.</p>
+<p>The
+<a href="http://bioconductor.org/packages/regioneR">regioneR</a>
+package implements a general framework for testing overlaps of genomic regions
+based on permutation sampling.
+This allows to repeatedly sample random regions from the genome, matching size
+and chromosomal distribution of the region set under study.
+By recomputing the overlap with the functional features in each permutation,
+statistical significance of the observed overlap can be assessed.</p>
+<pre class="r"><code>suppressPackageStartupMessages(library(regioneR))</code></pre>
+<p>To demonstrate the basic functionality of the package, we consider the overlap
+of gene promoter regions and CpG islands in the human genome. We expect to find
+an enrichment as promoter regions are known to be GC-rich. Hence, is the
+overlap between CpG islands and promoters greater than expected by
+chance?</p>
+<p>We use the collection of CpG islands described in
+<a href="https://doi.org/10.1093/biostatistics/kxq005">Wu et al., 2010</a> and restrict
+them to the set of canonical chromosomes 1-23, <em>X</em>, and <em>Y</em>.</p>
+<pre class="r"><code>cpgHMM &lt;- toGRanges(&quot;http://www.haowulab.org/software/makeCGI/model-based-cpg-islands-hg19.txt&quot;)
+cpgHMM &lt;- filterChromosomes(cpgHMM, chr.type=&quot;canonical&quot;)
+cpgHMM &lt;- sort(cpgHMM)
+cpgHMM</code></pre>
+<pre><code>## GRanges object with 63705 ranges and 5 metadata columns:
+##           seqnames            ranges strand |    length  CpGcount
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;integer&gt;
+##       [1]     chr1       10497-11241      * |       745       110
+##       [2]     chr1       28705-29791      * |      1087       115
+##       [3]     chr1     135086-135805      * |       720        42
+##       [4]     chr1     136164-137362      * |      1199        71
+##       [5]     chr1     137665-138121      * |       457        22
+##       ...      ...               ...    ... .       ...       ...
+##   [63701]     chrY 59213702-59214290      * |       589        43
+##   [63702]     chrY 59240512-59241057      * |       546        40
+##   [63703]     chrY 59348047-59348370      * |       324        17
+##   [63704]     chrY 59349137-59349565      * |       429        31
+##   [63705]     chrY 59361489-59362401      * |       913       128
+##           GCcontent     pctGC    obsExp
+##           &lt;integer&gt; &lt;numeric&gt; &lt;numeric&gt;
+##       [1]       549     0.737     1.106
+##       [2]       792     0.729     0.818
+##       [3]       484     0.672     0.548
+##       [4]       832     0.694     0.524
+##       [5]       301     0.659     0.475
+##       ...       ...       ...       ...
+##   [63701]       366     0.621     0.765
+##   [63702]       369     0.676     0.643
+##   [63703]       193     0.596     0.593
+##   [63704]       276     0.643       0.7
+##   [63705]       650     0.712     1.108
+##   -------
+##   seqinfo: 24 sequences from an unspecified genome; no seqlengths</code></pre>
+<p>Analogously, we load promoter regions in the <em>hg19</em> human genome assembly as
+available from <a href="https://genome.ucsc.edu/">UCSC</a>:</p>
+<pre class="r"><code>promoters &lt;- toGRanges(&quot;http://gattaca.imppc.org/regioner/data/UCSC.promoters.hg19.bed&quot;)
+promoters &lt;- filterChromosomes(promoters, chr.type=&quot;canonical&quot;)
+promoters &lt;- sort(promoters)
+promoters</code></pre>
+<pre><code>## GRanges object with 49049 ranges and 3 metadata columns:
+##           seqnames            ranges strand |       V4       V5       V6
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;factor&gt; &lt;factor&gt; &lt;factor&gt;
+##       [1]     chr1        9873-12073      * |      TSS        .        +
+##       [2]     chr1       16565-18765      * |      TSS        .        -
+##       [3]     chr1       17551-19751      * |      TSS        .        -
+##       [4]     chr1       17861-20061      * |      TSS        .        -
+##       [5]     chr1       19559-21759      * |      TSS        .        -
+##       ...      ...               ...    ... .      ...      ...      ...
+##   [49045]     chrY 59211948-59214148      * |      TSS        .        +
+##   [49046]     chrY 59328251-59330451      * |      TSS        .        +
+##   [49047]     chrY 59350972-59353172      * |      TSS        .        +
+##   [49048]     chrY 59352984-59355184      * |      TSS        .        +
+##   [49049]     chrY 59360654-59362854      * |      TSS        .        -
+##   -------
+##   seqinfo: 24 sequences from an unspecified genome; no seqlengths</code></pre>
+<p>To speed up the example, we restrict analysis to chromosomes 21 and 22. Note
+that this is done for demonstration only. To make an accurate claim, the
+complete region set should be used (which, however, runs considerably longer).</p>
+<pre class="r"><code>cpg &lt;- cpgHMM[seqnames(cpgHMM) %in% c(&quot;chr21&quot;, &quot;chr22&quot;)]
+prom &lt;- promoters[seqnames(promoters) %in% c(&quot;chr21&quot;, &quot;chr22&quot;)]</code></pre>
+<p>Now, we are applying an overlap permutation test with 100 permutations
+(<code>ntimes=100</code>), while maintaining chromosomal distribution of the CpG island
+region set (<code>per.chromosome=TRUE</code>). Furthermore, we use the option
+<code>count.once=TRUE</code> to count an overlapping CpG island only once, even if it
+overlaps with 2 or more promoters.</p>
+<p>Note that we use 100 permutations for demonstration only.
+To draw robust conclusions a minimum of 1000 permutations should be carried out.</p>
+<pre class="r"><code>pt &lt;- overlapPermTest(cpg, prom, genome=&quot;hg19&quot;, ntimes=100, per.chromosome=TRUE, count.once=TRUE)
+pt</code></pre>
+<pre><code>## $numOverlaps
+## P-value: 0.0099009900990099
+## Z-score: 44.3158
+## Number of iterations: 100
+## Alternative: greater
+## Evaluation of the original region set: 719
+## Evaluation function: numOverlaps
+## Randomization function: randomizeRegions
+## 
+## attr(,&quot;class&quot;)
+## [1] &quot;permTestResultsList&quot;</code></pre>
+<pre class="r"><code>summary(pt[[1]]$permuted)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   133.0   159.8   167.5   168.6   177.0   196.0</code></pre>
+<p>The resulting permutation <em>p</em>-value indicates a significant enrichment. Out of
+the 2859 CpG islands, 719 overlap with at least one
+promoter. In contrast, when repeatedly drawing random regions matching the CpG
+islands in size and chromosomal distribution, the mean number of overlapping
+regions across permutations was 117.7
+<span class="math inline">±</span> 11.8.</p>
+<p>Note #1: The function <code>regioneR::permTest</code> allows to incorporate user-defined
+functions for randomizing regions and evaluating additional measures of overlap
+such as total genomic size in bp.</p>
+<p>Note #2: The
+<a href="http://bioconductor.org/packages/LOLA">LOLA</a>
+package implements a genomic region ORA, which assesses genomic region overlap
+based on the hypergeometric distribution using a library of pre-defined functional
+region sets.</p>
+</div>
+</div>
+
+
+
+
+                </section>
+            </div><footer role="contentinfo">
+  <div class="wrap">
+    <p>
+      This project is maintained by
+      <a href="https://github.com/Bioconductor">Bioconductor</a
+      >.
+    </p>
+
+    <p>
+      Hosted on
+      <a href="#">GitHub</a>.
+    </p>
+    <p>
+      <a href="https://github.com/Bioconductor/BiocWorkshops2019/edit/master/content/page/enrichOmics__enrichOmics.html">
+          Edit this page</a> or <a href="https://github.com/Bioconductor/BiocWorkshops2019/issues">
+        file an issue</a> on
+      github.
+    </p>
+  </div>
+  
+</footer>
+</div>
+    </body>
+</html>

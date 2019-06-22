@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html><head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta charset="utf-8">
+  <title>
+      
+  </title>
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="../assets/css/normalize.css">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/syntax.css">
+  
+
+</head>
+<body>
+        <div class="container"><header role="banner">
+  <div class="wrap">
+    
+      <img class="logo" src=".././imgs/cover.png" alt="bioconductor" style="height:60px">
+    
+    <h1 class="site-title"><a class="title-link" href="../">BiocWorkshops2019</a></h1>
+  </div>
+</header>
+<div class="wrap content">
+                <section id="main" class="main-content" role="main">
+
+
+
+
+<p><a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</p>
+
+<h1 id="instructions-for-workshop-authors">Instructions For Workshop Authors</h1>
+
+<h2 id="getting-started">Getting started</h2>
+
+<p>To contribute a new workshop, open a <a href="https://github.com/Bioconductor/BiocWorkshops2019/issues">BiocWorkshops issue</a> starting with
+the <code>[Workshop]</code> keyword in the title of the issue. Provide a link to the
+repository in the issue message body. You may also include GitHub usernames
+of workshop collaborators. For a successful workshop build, adhere to the
+following:</p>
+
+<ol>
+<li>Package your workshop as an R package. The example package <a href="https://github.com/lpantano/dummychapter1">https://github.com/lpantano/dummychapter1</a> demonstrates all key elements of how your package must be prepared, and also provides an example <code>.travis.yml</code> for Continuous Integration against bioc-devel.</li>
+<li>Include a standard vignette in the vignettes directory</li>
+<li>Put any extra files (images, .bib) in <code>inst/vignettes</code> and reference them
+in the vignette using <code>system.file</code></li>
+<li>Number <strong>3</strong> requires package chapter installation before vignette build or
+<code>build_vignettes=TRUE</code> when building the package.</li>
+<li>Use only one top-level section (<code>#</code>), for the title of your workshop. All other sections must be second-level (<code>##</code>) or lower. You may find the <a href="https://bookdown.org/yihui/bookdown/usage.html">usage section of the Bookdown documentation</a> helpful for background.</li>
+<li>Do not use <code>BiocStyle</code> functionality. The style will be based on bookdown/gitbook.</li>
+</ol>
+
+<h3 id="description">DESCRIPTION</h3>
+
+<p>Update the DESCRIPTION file adding packages utilized in your workshop to
+the <strong>Imports</strong> field.</p>
+
+<h3 id="use-bioc-devel">Use bioc-devel</h3>
+
+<p>BioC2019 workshops will run on <strong>bioc-devel (3.10)</strong>. That means that this book will be built on bioc-devel, workshop participants will use virtual machines running bioc-devel, and your workshops will be tested against bioc-devel. See <a href="https://www.bioconductor.org/developers/how-to/useDevel/">Using ‘bioc-devel’ during mid-April to mid-October</a> for how to run bioc-devel; thankfully we are in the easy time of year for running release and devel side-by-side. Also, the <a href="https://github.com/lpantano/dummychapter1">dummy chapter</a> includes a highly recommendable TravisCI setup for Continuous Integration against bioc-devel.</p>
+
+<h2 id="deadlines-for-bioc2019">Deadlines for Bioc2019</h2>
+
+<p>Please be aware of the following deadlines for the <a href="https://bioc2019.bioconductor.org/">Bioconductor 2019 Conference</a> in New York</p>
+
+<ul>
+<li><strong>Mon May 27:</strong> draft workshop materials submitted as an Issue to this Bioconductor GitHub repo</li>
+<li><strong>Mon June 10:</strong> complete workshop submitted. Only bugfixes / refinements should be made after this point.</li>
+<li><strong>Mon June 17:</strong> All workshops complete and building without error. No new commits to contributor repos will be incorporated.</li>
+</ul>
+
+
+
+                </section>
+            </div><footer role="contentinfo">
+  <div class="wrap">
+    <p>
+      This project is maintained by
+      <a href="https://github.com/Bioconductor">Bioconductor</a
+      >.
+    </p>
+
+    <p>
+      Hosted on
+      <a href="#">GitHub</a>.
+    </p>
+    <p>
+      <a href="https://github.com/Bioconductor/BiocWorkshops2019/edit/master/content/about.md">
+          Edit this page</a> or <a href="https://github.com/Bioconductor/BiocWorkshops2019/issues">
+        file an issue</a> on
+      github.
+    </p>
+  </div>
+  
+</footer>
+</div>
+    </body>
+</html>

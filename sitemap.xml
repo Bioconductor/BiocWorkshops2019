@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>/</loc>
+    <lastmod>2019-06-22T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/page/Bioc2019PanCancerStudy__Bioc2019_workshop/</loc>
+    <lastmod>2019-06-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/page/plyrangesWorkshops__common-tasks/</loc>
+    <lastmod>2019-06-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/page/genomeRegionPooling__GenomeRegions/</loc>
+    <lastmod>2019-06-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/page/Bioc2019pathwayPCA__integrative_pathway_analysis/</loc>
+    <lastmod>2019-06-22T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/page/</loc>
+    <lastmod>2019-06-22T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/page/plyrangesTximetaCaseStudy__plyrangesTximeta/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/muscWorkshop__vignette/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/BioconductorOnContainers__Bioconductor_Containers_Workshop/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/BiocCloudws__cloudScale2019/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/CNVWorkshop__CNVWorkshop/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/EpiForBioWorkshop__EpiForBioWorkshop/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/enrichOmics__enrichOmics/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/Bioc2019Anno__AnnotationWorkshop/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/PublicDataResources__PublicDataResources/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/MicrobiomeWorkshop__MicrobiomeWorkshop/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/ATACseqQCWorkshop__ATACseqQC_workshop/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/bioc2019singlecell__bioc2019singlecell/</loc>
+  </url>
+  
+  <url>
+    <loc>/categories/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/page/plyrangesWorkshops__solutions/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/DelayedArrayWorkshop__Effectively_using_the_DelayedArray_framework_for_users/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/iSEEWorkshop2019__iSEE-lab/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/MultiAssayWorkshop__Ramos_MultiAssayExperiment/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/OSCABioc2019__OSCABioc2019/</loc>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/about/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/recountWorkshop2019__recount-workshop/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/BiocIntro__RBiocForAll/</loc>
+  </url>
+  
+  <url>
+    <loc>/page/motifStackWorkshop__motifStackWorkshop/</loc>
+  </url>
+  
+</urlset>

@@ -1,0 +1,11 @@
+userSet	dbSet	collection	pValueLog	oddsRatio	support	rnkPV	rnkOR	rnkSup	maxRnk	meanRnk	b	c	d	description	cellType	tissue	antibody	treatment	dataSource	filename	qValue	size
+setB	2	ucsc_example	264.486340728956	7.75782832095553	850	1	1	2	2	1.33	452	4981	20546	ucsc_example	NA	NA	NA	NA	NA	laminB1Lads.bed	3.26331705752929e-264	1302
+setA	2	ucsc_example	254.618808027247	8.64873124863525	632	1	1	2	2	1.33	670	2510	23017	ucsc_example	NA	NA	NA	NA	NA	laminB1Lads.bed	1.20271292204043e-254	1302
+setB	1	ucsc_example	34.6073688600466	3.3494077765672	5747	2	2	1	2	1.67	20018	84	980	CpG islands from UCSC annotation	NA	NA	NA	NA	NA	cpgIslandExt.bed	8.23208574245702e-35	28691
+setA	4	ucsc_example	1.71696892873156	1.23777247869411	124	2	2	3	3	2.33	761	3018	22926	ucsc_example	NA	NA	NA	NA	NA	vistaEnhancers.bed	0.0383761203055359	1339
+setA	5	ucsc_example	1.71696892873156	1.23777247869411	124	2	2	3	3	2.33	761	3018	22926	ucsc_example	NA	NA	NA	NA	NA	vistaEnhancers_colNames.bed	0.0383761203055359	1340
+setA	3	ucsc_example	0.187735365980879	0.913569616521188	8	4	4	5	5	4.33	66	3134	23621	ucsc_example	NA	NA	NA	NA	NA	numtSAssembled.bed	1	78
+setA	1	ucsc_example	0.0281833352568686	0.870435468307838	3002	5	5	1	5	3.67	22763	140	924	CpG islands from UCSC annotation	NA	NA	NA	NA	NA	cpgIslandExt.bed	1	28691
+setB	3	ucsc_example	9.18482643653609e-06	0.205237674700801	4	3	5	5	5	4.33	70	5827	20928	ucsc_example	NA	NA	NA	NA	NA	numtSAssembled.bed	1	78
+setB	4	ucsc_example	0	0.348937948119605	80	4	3	3	4	3.33	805	5751	20193	ucsc_example	NA	NA	NA	NA	NA	vistaEnhancers.bed	1	1339
+setB	5	ucsc_example	0	0.348937948119605	80	4	3	3	4	3.33	805	5751	20193	ucsc_example	NA	NA	NA	NA	NA	vistaEnhancers_colNames.bed	1	1340

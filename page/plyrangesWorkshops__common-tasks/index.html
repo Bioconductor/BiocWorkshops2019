@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html><head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta charset="utf-8">
+  <title>
+      
+  </title>
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="../../assets/css/normalize.css">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/syntax.css">
+  
+
+</head>
+<body>
+        <div class="container"><header role="banner">
+  <div class="wrap">
+    
+      <img class="logo" src="../.././imgs/cover.png" alt="bioconductor" style="height:60px">
+    
+    <h1 class="site-title"><a class="title-link" href="../../">BiocWorkshops2019</a></h1>
+  </div>
+</header>
+<div class="wrap content">
+                <section id="main" class="main-content" role="main">
+
+
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>This tutorial will show you how to think about and perform common genomic data
+wrangling tasks using the using the <a href="https://bioconductor.org/packages/release/bioc/html/plyranges.html">plyranges</a> and <a href="https://bioconductor.org/packages/release/bioc/html/GenomicRanges.html">GenomicRanges</a>
+Bioconductor packages. These packages represent genomic data using the
+<em>GRanges</em> data structure, which provides a powerful abstraction for working
+with measurements or annotations along genomic regions. In this tutorial
+you will use <em>GRanges</em> object to construct workflows to</p>
+<ul>
+<li>read data from common formats like BED</li>
+<li>find overlaps between different sets of genomic regions</li>
+<li>compute coverage and related summaries</li>
+</ul>
+<div id="who-is-this-tutorial-is-for" class="section level2">
+<h2>Who is this tutorial is for?</h2>
+<p>If you are an R beginner or new to the Bioconductor ecosystem, this tutorial
+provides a comprehensive overview of one of the most important data structures
+in Bioconductor, <em>GRanges</em>. We show you how to think of this data structure
+as a special kind of table and perform all kinds of operations on it.</p>
+<p>If you are familiar with the tidyverse suite of packages, then the operations
+and workflows we will develop will look somewhat familiar to you. However, due
+to the complexity of genomics data, plyranges develops a new grammar based
+on the tidyverse to meet the needs of the computational biologist.</p>
+<p>We assume you know what a data.frame is and have some knowledge
+of vector types in R.</p>
+<p>The examples and and exercises are based on the <a href="http://bioconductor.org/packages/release/bioc/vignettes/HelloRanges/inst/doc/tutorial.pdf">HelloRanges package tutorial</a>.
+If you are familiar with bedtools, this is an excellent resource for learning
+how similar operations are performed with Bioconductor packages.</p>
+</div>
+<div id="setup" class="section level2">
+<h2>Setup</h2>
+<p>You will need R (version 3.5 or greater) with the following packages installed:</p>
+<pre class="r"><code># Bioconductor
+library(GenomicRanges)
+library(plyranges)
+library(HelloRangesData)</code></pre>
+<p>If you do not have these packages you can install them as follows:</p>
+<pre class="r"><code> # -&gt; Bioconductor packages are installed with this package
+install.packages(&quot;BiocManager&quot;)
+# then use the install function from BiocManager 
+BiocManager::install(c(&quot;GenomicRanges&quot;, &quot;plyranges&quot;, &quot;HelloRangesData&quot;))</code></pre>
+</div>
+</div>
+<div id="introducing-granges" class="section level1">
+<h1>Introducing GRanges</h1>
+<p>The GRanges is a fundamental data structure used in the Bioconductor ecosystem.
+It is very similar to the base R data.frame but with appropriate
+semantics for a genomics experiment: it has fixed columns
+for the chromosome, start and end coordinates, and the strand, along
+with an arbitrary set of additional columns, consisting of
+measurements or metadata specific to the data type or experiment.</p>
+<p>GRanges balances flexibility with formal
+constraints, so that it is applicable to virtually any genomic
+workflow, while also being semantically rich enough to support
+high-level operations on genomic ranges.</p>
+<p>We can create a GRanges from an ordinary data.frame with plyranges using
+the <code>as_granges()</code> function:</p>
+<pre class="r"><code>library(plyranges, quietly = TRUE)
+genes &lt;- data.frame(seqnames = &quot;VI&quot;, 
+                    start = c(3322, 3030, 1437,  5066, 6426, 836),
+                    end = c(3846, 3338, 2615, 5521, 7565, 1363),
+                    strand = c(&quot;-&quot;, &quot;-&quot;, &quot;-&quot;, &quot;+&quot;, &quot;+&quot;, &quot;+&quot;),
+                    gene_id=c(&quot;YFL064C&quot;, &quot;YFL065C&quot;, &quot;YFL066C&quot;, 
+                              &quot;YFL063W&quot;, &quot;YFL062W&quot;, &quot;YFL067W&quot;),
+                    gc = runif(6),
+                    score = rbinom(6, size = 3, p = 0.1),
+                    stringsAsFactors = FALSE)
+genes &lt;- as_granges(genes)
+
+genes</code></pre>
+<pre><code>## GRanges object with 6 ranges and 3 metadata columns:
+##       seqnames    ranges strand |     gene_id                gc     score
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;         &lt;numeric&gt; &lt;integer&gt;
+##   [1]       VI 3322-3846      - |     YFL064C 0.672622985672206         0
+##   [2]       VI 3030-3338      - |     YFL065C 0.168389319442213         0
+##   [3]       VI 1437-2615      - |     YFL066C 0.081997754285112         1
+##   [4]       VI 5066-5521      + |     YFL063W 0.358257586602122         0
+##   [5]       VI 6426-7565      + |     YFL062W 0.557314032688737         1
+##   [6]       VI  836-1363      + |     YFL067W 0.826518925838172         0
+##   -------
+##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+<p>You might notice a few differences between how the <code>genes</code> GRanges
+object is printed compared to an ordinary data.frame or tibble.</p>
+<p>The measurements/annotation columns like gene_id, gc and score are placed
+on the right hand side of the “|”. These are referred to as metadata columns;
+they are not strictly required to construct a GRanges object but are useful
+for providing biological context.</p>
+<p>The required part of a GRanges object are left of the “|”
+character. These are the seqnames column, the ranges (start, end, width) column,
+and the strand column.</p>
+<p>You may have also noticed that underneath each column name is the type of
+that column. The metadata columnns are of some usual base R types like
+<code>character</code>, <code>numeric</code>, and <code>integer</code> but the core columns may be
+unfamiliar. The seqnames and strand column are (factor) <code>Rle</code> columns.
+<code>Rle</code> stands for run length encoding, and refers to how a column is stored.
+For now, there is no harm in thinking about these as ordinary factors.</p>
+<p>The ranges column is an <code>IRanges</code> which really consists
+of three columns: the start, end and width coordinates of the range.
+This becomes apparent if you look back to our original data.frame - the start
+and end columns from there are just the start and end intervals of the ranges
+column.</p>
+<p>Do not be concerned if this a bit confusing for now, once we start
+playing with our GRanges object, everything will become clearer.</p>
+</div>
+<div id="granges-transformation-and-import" class="section level1">
+<h1>GRanges transformation and import</h1>
+<p>Once you have obtained data from an experiment or a public repository,
+you often want to compute summaries, create new columns, modify the
+genomic regions or just rearrange the data. Here you will learn how
+to achieve these tasks using the plyranges:</p>
+<ul>
+<li>Modify, subset, and aggregate genomic data with the <code>mutate()</code>,
+<code>filter()</code>, and <code>summarise()</code>.</li>
+<li>Modify genomic regions with the <code>mutate()</code>…</li>
+<li>And while fixing the start/end/center coordinates with the <code>anchor_*</code> family
+of functions.</li>
+<li>Merge all overlapping and adjacent genomic regions with <code>reduce_ranges()</code>.</li>
+<li>Merge the end points of all genomic regions with <code>disjoin_ranges()</code>.</li>
+<li>Sort genomic ranges with <code>arrange()</code>.</li>
+</ul>
+<p>Any of the above operations can be performed on subsets of the
+data with <code>group_by()</code>.</p>
+<div id="getting-started" class="section level2">
+<h2>Getting started</h2>
+<p>To begin we will test out some of these operations using a
+GRanges object obtained from a BED file
+containing annotated exons from RefSeq from the hg19 genome build.
+To load the file as GRanges we can simply use the <code>read_bed</code> function from
+plyranges.</p>
+<pre class="r"><code>exons_bed &lt;- system.file(&quot;extdata&quot;, &quot;exons.bed&quot;, package=&quot;HelloRangesData&quot;)
+
+# our genome build, requires internet connection
+# build &lt;- genome_info(&quot;hg19&quot;)
+
+build &lt;- system.file(&quot;extdata&quot;, &quot;hg19.genome&quot;, package=&quot;HelloRangesData&quot;) %&gt;% 
+  read.delim(header = FALSE, col.names = c(&quot;seqnames&quot;, &quot;width&quot;)) %&gt;% 
+  as_granges(start = 1) %&gt;% 
+  set_genome_info(genome = &quot;hg19&quot;, 
+                  seqlengths = width(.))
+
+exons &lt;- read_bed(exons_bed, 
+                  genome_info = build)
+exons</code></pre>
+<pre><code>## GRanges object with 459752 ranges and 2 metadata columns:
+##            seqnames            ranges strand |
+##               &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |
+##        [1]     chr1       11874-12227      + |
+##        [2]     chr1       12613-12721      + |
+##        [3]     chr1       13221-14409      + |
+##        [4]     chr1       14362-14829      - |
+##        [5]     chr1       14970-15038      - |
+##        ...      ...               ...    ... .
+##   [459748]     chrY 59338754-59338859      + |
+##   [459749]     chrY 59338754-59338859      + |
+##   [459750]     chrY 59340194-59340278      + |
+##   [459751]     chrY 59342487-59343488      + |
+##   [459752]     chrY 59342487-59343488      + |
+##                                          name     score
+##                                   &lt;character&gt; &lt;numeric&gt;
+##        [1]    NR_046018_exon_0_0_chr1_11874_f         0
+##        [2]    NR_046018_exon_1_0_chr1_12613_f         0
+##        [3]    NR_046018_exon_2_0_chr1_13221_f         0
+##        [4]    NR_024540_exon_0_0_chr1_14362_r         0
+##        [5]    NR_024540_exon_1_0_chr1_14970_r         0
+##        ...                                ...       ...
+##   [459748] NM_002186_exon_6_0_chrY_59338754_f         0
+##   [459749] NM_176786_exon_7_0_chrY_59338754_f         0
+##   [459750] NM_002186_exon_7_0_chrY_59340194_f         0
+##   [459751] NM_002186_exon_8_0_chrY_59342487_f         0
+##   [459752] NM_176786_exon_8_0_chrY_59342487_f         0
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>The <code>genome_info()</code> function automatically propagates the reference
+annotations from the hg19 reference as a GRanges. This is important for
+ensuring the integrity of any operations involving modifications to
+genomic regions, like overlaps or nearest neighbours.</p>
+</div>
+<div id="filter-ranges-with-filter" class="section level2">
+<h2>Filter ranges with <code>filter()</code></h2>
+<p>We can <code>filter()</code> ranges based on column values being <code>TRUE</code>. This
+requires passing the ranges, along with one or more logical expressions.</p>
+<p>For example, we can restrict exons to those that are on the
+the X chromosome:</p>
+<pre class="r"><code>filter(exons, seqnames == &quot;chrX&quot;)</code></pre>
+<pre><code>## GRanges object with 18173 ranges and 2 metadata columns:
+##           seqnames              ranges strand |
+##              &lt;Rle&gt;           &lt;IRanges&gt;  &lt;Rle&gt; |
+##       [1]     chrX       192991-193061      + |
+##       [2]     chrX       198061-198351      + |
+##       [3]     chrX       198149-198351      + |
+##       [4]     chrX       200834-200981      + |
+##       [5]     chrX       200834-200981      + |
+##       ...      ...                 ...    ... .
+##   [18169]     chrX 155235748-155235853      + |
+##   [18170]     chrX 155235748-155235853      + |
+##   [18171]     chrX 155237188-155237272      + |
+##   [18172]     chrX 155239481-155240482      + |
+##   [18173]     chrX 155239481-155240482      + |
+##                                          name     score
+##                                   &lt;character&gt; &lt;numeric&gt;
+##       [1]    NR_028057_exon_0_0_chrX_192991_f         0
+##       [2]    NM_018390_exon_0_0_chrX_198061_f         0
+##       [3]    NR_028057_exon_1_0_chrX_198149_f         0
+##       [4]    NM_018390_exon_1_0_chrX_200834_f         0
+##       [5]    NR_028057_exon_2_0_chrX_200834_f         0
+##       ...                                 ...       ...
+##   [18169] NM_002186_exon_6_0_chrX_155235748_f         0
+##   [18170] NM_176786_exon_7_0_chrX_155235748_f         0
+##   [18171] NM_002186_exon_7_0_chrX_155237188_f         0
+##   [18172] NM_002186_exon_8_0_chrX_155239481_f         0
+##   [18173] NM_176786_exon_8_0_chrX_155239481_f         0
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>Multiple conditions can be composed together within a call to filter by
+separating the expressions with a comma. To restrict exons to those
+that are on the X chromosome <em>AND</em> on the positive strand:</p>
+<pre class="r"><code>filter(exons, seqnames == &quot;chrX&quot;, strand == &quot;+&quot;)</code></pre>
+<pre><code>## GRanges object with 9176 ranges and 2 metadata columns:
+##          seqnames              ranges strand |
+##             &lt;Rle&gt;           &lt;IRanges&gt;  &lt;Rle&gt; |
+##      [1]     chrX       192991-193061      + |
+##      [2]     chrX       198061-198351      + |
+##      [3]     chrX       198149-198351      + |
+##      [4]     chrX       200834-200981      + |
+##      [5]     chrX       200834-200981      + |
+##      ...      ...                 ...    ... .
+##   [9172]     chrX 155235748-155235853      + |
+##   [9173]     chrX 155235748-155235853      + |
+##   [9174]     chrX 155237188-155237272      + |
+##   [9175]     chrX 155239481-155240482      + |
+##   [9176]     chrX 155239481-155240482      + |
+##                                         name     score
+##                                  &lt;character&gt; &lt;numeric&gt;
+##      [1]    NR_028057_exon_0_0_chrX_192991_f         0
+##      [2]    NM_018390_exon_0_0_chrX_198061_f         0
+##      [3]    NR_028057_exon_1_0_chrX_198149_f         0
+##      [4]    NM_018390_exon_1_0_chrX_200834_f         0
+##      [5]    NR_028057_exon_2_0_chrX_200834_f         0
+##      ...                                 ...       ...
+##   [9172] NM_002186_exon_6_0_chrX_155235748_f         0
+##   [9173] NM_176786_exon_7_0_chrX_155235748_f         0
+##   [9174] NM_002186_exon_7_0_chrX_155237188_f         0
+##   [9175] NM_002186_exon_8_0_chrX_155239481_f         0
+##   [9176] NM_176786_exon_8_0_chrX_155239481_f         0
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>This is equivalent to</p>
+<pre class="r"><code>filter(exons, seqnames == &quot;chrX&quot; &amp; strand == &quot;+&quot;)</code></pre>
+<pre><code>## GRanges object with 9176 ranges and 2 metadata columns:
+##          seqnames              ranges strand |
+##             &lt;Rle&gt;           &lt;IRanges&gt;  &lt;Rle&gt; |
+##      [1]     chrX       192991-193061      + |
+##      [2]     chrX       198061-198351      + |
+##      [3]     chrX       198149-198351      + |
+##      [4]     chrX       200834-200981      + |
+##      [5]     chrX       200834-200981      + |
+##      ...      ...                 ...    ... .
+##   [9172]     chrX 155235748-155235853      + |
+##   [9173]     chrX 155235748-155235853      + |
+##   [9174]     chrX 155237188-155237272      + |
+##   [9175]     chrX 155239481-155240482      + |
+##   [9176]     chrX 155239481-155240482      + |
+##                                         name     score
+##                                  &lt;character&gt; &lt;numeric&gt;
+##      [1]    NR_028057_exon_0_0_chrX_192991_f         0
+##      [2]    NM_018390_exon_0_0_chrX_198061_f         0
+##      [3]    NR_028057_exon_1_0_chrX_198149_f         0
+##      [4]    NM_018390_exon_1_0_chrX_200834_f         0
+##      [5]    NR_028057_exon_2_0_chrX_200834_f         0
+##      ...                                 ...       ...
+##   [9172] NM_002186_exon_6_0_chrX_155235748_f         0
+##   [9173] NM_176786_exon_7_0_chrX_155235748_f         0
+##   [9174] NM_002186_exon_7_0_chrX_155237188_f         0
+##   [9175] NM_002186_exon_8_0_chrX_155239481_f         0
+##   [9176] NM_176786_exon_8_0_chrX_155239481_f         0
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>But not the same as filtering exons to those on the X chromosome or
+positively stranded.</p>
+<pre class="r"><code>filter(exons, seqnames == &quot;chrX&quot; | strand == &quot;+&quot;)</code></pre>
+<pre><code>## GRanges object with 241162 ranges and 2 metadata columns:
+##            seqnames            ranges strand |
+##               &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |
+##        [1]     chr1       11874-12227      + |
+##        [2]     chr1       12613-12721      + |
+##        [3]     chr1       13221-14409      + |
+##        [4]     chr1       69091-70008      + |
+##        [5]     chr1     323892-324060      + |
+##        ...      ...               ...    ... .
+##   [241158]     chrY 59338754-59338859      + |
+##   [241159]     chrY 59338754-59338859      + |
+##   [241160]     chrY 59340194-59340278      + |
+##   [241161]     chrY 59342487-59343488      + |
+##   [241162]     chrY 59342487-59343488      + |
+##                                          name     score
+##                                   &lt;character&gt; &lt;numeric&gt;
+##        [1]    NR_046018_exon_0_0_chr1_11874_f         0
+##        [2]    NR_046018_exon_1_0_chr1_12613_f         0
+##        [3]    NR_046018_exon_2_0_chr1_13221_f         0
+##        [4] NM_001005484_exon_0_0_chr1_69091_f         0
+##        [5]   NR_028322_exon_0_0_chr1_323892_f         0
+##        ...                                ...       ...
+##   [241158] NM_002186_exon_6_0_chrY_59338754_f         0
+##   [241159] NM_176786_exon_7_0_chrY_59338754_f         0
+##   [241160] NM_002186_exon_7_0_chrY_59340194_f         0
+##   [241161] NM_002186_exon_8_0_chrY_59342487_f         0
+##   [241162] NM_176786_exon_8_0_chrY_59342487_f         0
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>For a comprehensive overview of all R’s logical operators see <a href="https://r4ds.had.co.nz/transform.html#filter-rows-with-filter"><strong>section
+5.2.2 of R for Data Science</strong></a>.</p>
+<div id="overlap-based-filtering" class="section level3">
+<h3>Overlap based filtering</h3>
+<p>We can also restrict ranges by overlaps using <code>filter_by_overlaps()</code>,
+or exclude non overlapping features using <code>filter_by_non_overlaps()</code>.</p>
+<p>To see how these work it’ll be useful to load another GRanges object,
+this time from a BED file containing CpG islands.</p>
+<pre class="r"><code>cpg_bed &lt;- system.file(&quot;extdata&quot;, &quot;cpg.bed&quot;, package = &quot;HelloRangesData&quot;)
+
+cpg &lt;- read_bed(cpg_bed, 
+                genome_info = build)
+cpg</code></pre>
+<pre><code>## GRanges object with 28691 ranges and 1 metadata column:
+##           seqnames            ranges strand |        name
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
+##       [1]     chr1       28736-29810      * |    CpG:_116
+##       [2]     chr1     135125-135563      * |     CpG:_30
+##       [3]     chr1     327791-328229      * |     CpG:_29
+##       [4]     chr1     437152-438164      * |     CpG:_84
+##       [5]     chr1     449274-450544      * |     CpG:_99
+##       ...      ...               ...    ... .         ...
+##   [28687]     chrY 27610116-27611088      * |     CpG:_76
+##   [28688]     chrY 28555536-28555932      * |     CpG:_32
+##   [28689]     chrY 28773316-28773544      * |     CpG:_25
+##   [28690]     chrY 59213795-59214183      * |     CpG:_36
+##   [28691]     chrY 59349267-59349574      * |     CpG:_29
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>To find exons that do not overlap any cpg islands we</p>
+<pre class="r"><code>filter_by_non_overlaps(exons, cpg)</code></pre>
+<pre><code>## GRanges object with 414647 ranges and 2 metadata columns:
+##            seqnames            ranges strand |
+##               &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |
+##        [1]     chr1       11874-12227      + |
+##        [2]     chr1       12613-12721      + |
+##        [3]     chr1       13221-14409      + |
+##        [4]     chr1       14362-14829      - |
+##        [5]     chr1       14970-15038      - |
+##        ...      ...               ...    ... .
+##   [414643]     chrY 59338754-59338859      + |
+##   [414644]     chrY 59338754-59338859      + |
+##   [414645]     chrY 59340194-59340278      + |
+##   [414646]     chrY 59342487-59343488      + |
+##   [414647]     chrY 59342487-59343488      + |
+##                                          name     score
+##                                   &lt;character&gt; &lt;numeric&gt;
+##        [1]    NR_046018_exon_0_0_chr1_11874_f         0
+##        [2]    NR_046018_exon_1_0_chr1_12613_f         0
+##        [3]    NR_046018_exon_2_0_chr1_13221_f         0
+##        [4]    NR_024540_exon_0_0_chr1_14362_r         0
+##        [5]    NR_024540_exon_1_0_chr1_14970_r         0
+##        ...                                ...       ...
+##   [414643] NM_002186_exon_6_0_chrY_59338754_f         0
+##   [414644] NM_176786_exon_7_0_chrY_59338754_f         0
+##   [414645] NM_002186_exon_7_0_chrY_59340194_f         0
+##   [414646] NM_002186_exon_8_0_chrY_59342487_f         0
+##   [414647] NM_176786_exon_8_0_chrY_59342487_f         0
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>Or we could find the cpg islands that are overlapped by exons</p>
+<pre class="r"><code>filter_by_overlaps(cpg, exons)</code></pre>
+<pre><code>## GRanges object with 18845 ranges and 1 metadata column:
+##           seqnames            ranges strand |        name
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
+##       [1]     chr1       28736-29810      * |    CpG:_116
+##       [2]     chr1     135125-135563      * |     CpG:_30
+##       [3]     chr1     327791-328229      * |     CpG:_29
+##       [4]     chr1     713985-714547      * |     CpG:_60
+##       [5]     chr1     762417-763445      * |    CpG:_115
+##       ...      ...               ...    ... .         ...
+##   [18841]     chrY 25345105-25345331      * |     CpG:_21
+##   [18842]     chrY 25365504-25365730      * |     CpG:_21
+##   [18843]     chrY 26959490-26959716      * |     CpG:_21
+##   [18844]     chrY 26979890-26980116      * |     CpG:_21
+##   [18845]     chrY 59213795-59214183      * |     CpG:_36
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+</div>
+</div>
+<div id="modify-metadata-with-mutate" class="section level2">
+<h2>Modify metadata with <code>mutate()</code></h2>
+<p>New metadata columns can be created using the <code>mutate()</code> function. The first
+argument is the GRanges object we are mutating and the remaining arguments
+are name-value pairs, where name refers to name of the new column being
+created and value refers to the value the new column will take.</p>
+<p>As an example, we make a new column called total_length which contains the number
+of bases of in each CpG island. This is just a copy of the width column in
+Ranges object.</p>
+<pre class="r"><code>mutate(cpg, total_length =  width)</code></pre>
+<pre><code>## GRanges object with 28691 ranges and 2 metadata columns:
+##           seqnames            ranges strand |        name total_length
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;    &lt;integer&gt;
+##       [1]     chr1       28736-29810      * |    CpG:_116         1075
+##       [2]     chr1     135125-135563      * |     CpG:_30          439
+##       [3]     chr1     327791-328229      * |     CpG:_29          439
+##       [4]     chr1     437152-438164      * |     CpG:_84         1013
+##       [5]     chr1     449274-450544      * |     CpG:_99         1271
+##       ...      ...               ...    ... .         ...          ...
+##   [28687]     chrY 27610116-27611088      * |     CpG:_76          973
+##   [28688]     chrY 28555536-28555932      * |     CpG:_32          397
+##   [28689]     chrY 28773316-28773544      * |     CpG:_25          229
+##   [28690]     chrY 59213795-59214183      * |     CpG:_36          389
+##   [28691]     chrY 59349267-59349574      * |     CpG:_29          308
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>Multiple columns can be computed inside of a call to <code>mutate()</code> by separating
+each pair of name-value expressions with a comma, we could add an additional
+column called mid, which is the midpoint of the CpG island.</p>
+<pre class="r"><code>mutate(cpg,
+       total_length = width,
+       mid = start + (width - 1) %/% 2
+       )</code></pre>
+<pre><code>## GRanges object with 28691 ranges and 3 metadata columns:
+##           seqnames            ranges strand |        name total_length
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;    &lt;integer&gt;
+##       [1]     chr1       28736-29810      * |    CpG:_116         1075
+##       [2]     chr1     135125-135563      * |     CpG:_30          439
+##       [3]     chr1     327791-328229      * |     CpG:_29          439
+##       [4]     chr1     437152-438164      * |     CpG:_84         1013
+##       [5]     chr1     449274-450544      * |     CpG:_99         1271
+##       ...      ...               ...    ... .         ...          ...
+##   [28687]     chrY 27610116-27611088      * |     CpG:_76          973
+##   [28688]     chrY 28555536-28555932      * |     CpG:_32          397
+##   [28689]     chrY 28773316-28773544      * |     CpG:_25          229
+##   [28690]     chrY 59213795-59214183      * |     CpG:_36          389
+##   [28691]     chrY 59349267-59349574      * |     CpG:_29          308
+##                 mid
+##           &lt;numeric&gt;
+##       [1]     29273
+##       [2]    135344
+##       [3]    328010
+##       [4]    437658
+##       [5]    449909
+##       ...       ...
+##   [28687]  27610602
+##   [28688]  28555734
+##   [28689]  28773430
+##   [28690]  59213989
+##   [28691]  59349420
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>Moreover, <code>mutate()</code> keeps track of which columnns have been created, so
+you can create new columns using pre-existing ones.</p>
+<pre class="r"><code>mutate(cpg,
+       total_length = width,
+       mid = start + (width - 1) %/% 2,
+       mid2 = sqrt(mid)
+       )</code></pre>
+<pre><code>## GRanges object with 28691 ranges and 4 metadata columns:
+##           seqnames            ranges strand |        name total_length
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;    &lt;integer&gt;
+##       [1]     chr1       28736-29810      * |    CpG:_116         1075
+##       [2]     chr1     135125-135563      * |     CpG:_30          439
+##       [3]     chr1     327791-328229      * |     CpG:_29          439
+##       [4]     chr1     437152-438164      * |     CpG:_84         1013
+##       [5]     chr1     449274-450544      * |     CpG:_99         1271
+##       ...      ...               ...    ... .         ...          ...
+##   [28687]     chrY 27610116-27611088      * |     CpG:_76          973
+##   [28688]     chrY 28555536-28555932      * |     CpG:_32          397
+##   [28689]     chrY 28773316-28773544      * |     CpG:_25          229
+##   [28690]     chrY 59213795-59214183      * |     CpG:_36          389
+##   [28691]     chrY 59349267-59349574      * |     CpG:_29          308
+##                 mid             mid2
+##           &lt;numeric&gt;        &lt;numeric&gt;
+##       [1]     29273  171.09354166654
+##       [2]    135344 367.891288290441
+##       [3]    328010  572.72157284321
+##       [4]    437658 661.557253758131
+##       [5]    449909 670.752562425221
+##       ...       ...              ...
+##   [28687]  27610602 5254.57914584984
+##   [28688]  28555734 5343.75654385564
+##   [28689]  28773430 5364.08706118758
+##   [28690]  59213989 7695.06263782173
+##   [28691]  59349420 7703.85747531715
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>In plyranges and GenomicRanges there are additional helpers that are useful
+for column creation during data analysis. As an example, we can
+add the count of the number of times each cpg island overlaps an exon and
+add a logical column asking if a cpg island is contained entirely within an
+exon.</p>
+<pre class="r"><code>cpg2 &lt;- mutate(cpg, 
+               n_olap = count_overlaps(cpg, exons),
+               is_contained = cpg %within% exons
+               )
+
+cpg2</code></pre>
+<pre><code>## GRanges object with 28691 ranges and 3 metadata columns:
+##           seqnames            ranges strand |        name    n_olap
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;integer&gt;
+##       [1]     chr1       28736-29810      * |    CpG:_116         1
+##       [2]     chr1     135125-135563      * |     CpG:_30         1
+##       [3]     chr1     327791-328229      * |     CpG:_29         3
+##       [4]     chr1     437152-438164      * |     CpG:_84         0
+##       [5]     chr1     449274-450544      * |     CpG:_99         0
+##       ...      ...               ...    ... .         ...       ...
+##   [28687]     chrY 27610116-27611088      * |     CpG:_76         0
+##   [28688]     chrY 28555536-28555932      * |     CpG:_32         0
+##   [28689]     chrY 28773316-28773544      * |     CpG:_25         0
+##   [28690]     chrY 59213795-59214183      * |     CpG:_36         5
+##   [28691]     chrY 59349267-59349574      * |     CpG:_29         0
+##           is_contained
+##              &lt;logical&gt;
+##       [1]        FALSE
+##       [2]         TRUE
+##       [3]         TRUE
+##       [4]        FALSE
+##       [5]        FALSE
+##       ...          ...
+##   [28687]        FALSE
+##   [28688]        FALSE
+##   [28689]        FALSE
+##   [28690]        FALSE
+##   [28691]        FALSE
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+</div>
+<div id="composing-workflows-with-the-pipe" class="section level2">
+<h2>Composing workflows with the pipe <code>%&gt;%</code></h2>
+<p>Now that you can use <code>filter()</code> and <code>mutate()</code>, you might like to start
+thinking about how you can combine them to form workflows. One way we can do
+this is with the pipe operator, <code>%&gt;%</code>.</p>
+<p>The pipe operator is read as the word <em>then</em>:</p>
+<pre class="r"><code># take cpg then filter
+cpg %&gt;% 
+  filter(seqnames == &quot;chrX&quot;)</code></pre>
+<pre><code>## GRanges object with 896 ranges and 1 metadata column:
+##         seqnames              ranges strand |        name
+##            &lt;Rle&gt;           &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
+##     [1]     chrX         64182-64793      * |     CpG:_62
+##     [2]     chrX         69134-70029      * |    CpG:_100
+##     [3]     chrX       148686-149461      * |     CpG:_85
+##     [4]     chrX       166505-167721      * |     CpG:_96
+##     [5]     chrX       170415-170686      * |     CpG:_27
+##     ...      ...                 ...    ... .         ...
+##   [892]     chrX 154687388-154688519      * |    CpG:_131
+##   [893]     chrX 154689347-154689788      * |     CpG:_41
+##   [894]     chrX 154842113-154842719      * |     CpG:_44
+##   [895]     chrX 155110789-155111177      * |     CpG:_36
+##   [896]     chrX 155246261-155246568      * |     CpG:_29
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>The argument on the left hand side of the pipe is forwarded to the first
+argument of the function on the right hand side. This can be made explicit
+with a <code>.</code></p>
+<pre class="r"><code>cpg %&gt;% 
+  filter(., seqnames == &quot;chrX&quot;)</code></pre>
+<pre><code>## GRanges object with 896 ranges and 1 metadata column:
+##         seqnames              ranges strand |        name
+##            &lt;Rle&gt;           &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
+##     [1]     chrX         64182-64793      * |     CpG:_62
+##     [2]     chrX         69134-70029      * |    CpG:_100
+##     [3]     chrX       148686-149461      * |     CpG:_85
+##     [4]     chrX       166505-167721      * |     CpG:_96
+##     [5]     chrX       170415-170686      * |     CpG:_27
+##     ...      ...                 ...    ... .         ...
+##   [892]     chrX 154687388-154688519      * |    CpG:_131
+##   [893]     chrX 154689347-154689788      * |     CpG:_41
+##   [894]     chrX 154842113-154842719      * |     CpG:_44
+##   [895]     chrX 155110789-155111177      * |     CpG:_36
+##   [896]     chrX 155246261-155246568      * |     CpG:_29
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>As long as the the result of applying the pipe returns a GRanges object,
+multiple functions can be strung together:</p>
+<pre class="r"><code>cpg %&gt;% 
+  filter(seqnames == &quot;chrX&quot;) %&gt;% 
+  filter(strand == &quot;+&quot;) %&gt;% 
+  mutate(new_col = runif(n())) </code></pre>
+<pre><code>## GRanges object with 0 ranges and 2 metadata columns:
+##    seqnames    ranges strand |        name   new_col
+##       &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;numeric&gt;
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>The use of the <code>.</code> can also make pipelines more succinct, as the argument
+on the left hand side can be forwarded to multiple parts of the function
+on the right hand side. We can rewrite, the creation of cpg2 above more
+compactly as</p>
+<pre class="r"><code>cpg %&gt;%  
+  mutate(n_olap = count_overlaps(., exons),
+         is_contained = . %within% exons)</code></pre>
+<pre><code>## GRanges object with 28691 ranges and 3 metadata columns:
+##           seqnames            ranges strand |        name    n_olap
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt; &lt;integer&gt;
+##       [1]     chr1       28736-29810      * |    CpG:_116         1
+##       [2]     chr1     135125-135563      * |     CpG:_30         1
+##       [3]     chr1     327791-328229      * |     CpG:_29         3
+##       [4]     chr1     437152-438164      * |     CpG:_84         0
+##       [5]     chr1     449274-450544      * |     CpG:_99         0
+##       ...      ...               ...    ... .         ...       ...
+##   [28687]     chrY 27610116-27611088      * |     CpG:_76         0
+##   [28688]     chrY 28555536-28555932      * |     CpG:_32         0
+##   [28689]     chrY 28773316-28773544      * |     CpG:_25         0
+##   [28690]     chrY 59213795-59214183      * |     CpG:_36         5
+##   [28691]     chrY 59349267-59349574      * |     CpG:_29         0
+##           is_contained
+##              &lt;logical&gt;
+##       [1]        FALSE
+##       [2]         TRUE
+##       [3]         TRUE
+##       [4]        FALSE
+##       [5]        FALSE
+##       ...          ...
+##   [28687]        FALSE
+##   [28688]        FALSE
+##   [28689]        FALSE
+##   [28690]        FALSE
+##   [28691]        FALSE
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<div id="exercises" class="section level3">
+<h3>Exercises</h3>
+<ol style="list-style-type: decimal">
+<li>Modify the above example so only CpG islands that are completely
+within exons are included in the result.</li>
+<li>Create a new column in exons called tx_id (the transcript
+id is everything before _exon in name).</li>
+</ol>
+</div>
+</div>
+<div id="modifying-genomic-regions-with-mutate" class="section level2">
+<h2>Modifying genomic regions with <code>mutate()</code></h2>
+<p>We have learnt in the above sections how to add new metadata columns with
+<code>mutate()</code> but we can also use `mutate() to modify the genomic regions.
+Recall that there are three components that make up a genomic region; the
+start, end, and the width.</p>
+<p>Let’s go back to our original GRanges of yeast genes. What happens
+if we add 10 bases to the width?</p>
+<pre class="r"><code>genes</code></pre>
+<pre><code>## GRanges object with 6 ranges and 3 metadata columns:
+##       seqnames    ranges strand |     gene_id                gc     score
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;         &lt;numeric&gt; &lt;integer&gt;
+##   [1]       VI 3322-3846      - |     YFL064C 0.672622985672206         0
+##   [2]       VI 3030-3338      - |     YFL065C 0.168389319442213         0
+##   [3]       VI 1437-2615      - |     YFL066C 0.081997754285112         1
+##   [4]       VI 5066-5521      + |     YFL063W 0.358257586602122         0
+##   [5]       VI 6426-7565      + |     YFL062W 0.557314032688737         1
+##   [6]       VI  836-1363      + |     YFL067W 0.826518925838172         0
+##   -------
+##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+<pre class="r"><code>genes %&gt;% 
+  mutate(width = width + 10L)</code></pre>
+<pre><code>## GRanges object with 6 ranges and 3 metadata columns:
+##       seqnames    ranges strand |     gene_id                gc     score
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;         &lt;numeric&gt; &lt;integer&gt;
+##   [1]       VI 3322-3856      - |     YFL064C 0.672622985672206         0
+##   [2]       VI 3030-3348      - |     YFL065C 0.168389319442213         0
+##   [3]       VI 1437-2625      - |     YFL066C 0.081997754285112         1
+##   [4]       VI 5066-5531      + |     YFL063W 0.358257586602122         0
+##   [5]       VI 6426-7575      + |     YFL062W 0.557314032688737         1
+##   [6]       VI  836-1373      + |     YFL067W 0.826518925838172         0
+##   -------
+##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+<p>All three components are mutually dependent, so in order to preserve the
+integrity of the GRanges structure, either the start or the end positions
+must change. In the case of adding to the width position by default
+the start is fixed and the end is increased. But what if we would like
+to modify the width but leave the end of fixed? Or the midpoint fixed?</p>
+<p>The solution is to anchor those positions (i.e. leave them fixed),
+using the <code>anchor_*()</code> family of functions:</p>
+<pre class="r"><code># fix the end
+genes %&gt;% 
+  anchor_end() %&gt;% 
+  mutate(width = width + 10L)</code></pre>
+<pre><code>## GRanges object with 6 ranges and 3 metadata columns:
+##       seqnames    ranges strand |     gene_id                gc     score
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;         &lt;numeric&gt; &lt;integer&gt;
+##   [1]       VI 3312-3846      - |     YFL064C 0.672622985672206         0
+##   [2]       VI 3020-3338      - |     YFL065C 0.168389319442213         0
+##   [3]       VI 1427-2615      - |     YFL066C 0.081997754285112         1
+##   [4]       VI 5056-5521      + |     YFL063W 0.358257586602122         0
+##   [5]       VI 6416-7565      + |     YFL062W 0.557314032688737         1
+##   [6]       VI  826-1363      + |     YFL067W 0.826518925838172         0
+##   -------
+##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+<pre class="r"><code># fix the centre
+genes %&gt;% 
+  anchor_centre() %&gt;% 
+  mutate(width = width + 10L)</code></pre>
+<pre><code>## GRanges object with 6 ranges and 3 metadata columns:
+##       seqnames    ranges strand |     gene_id                gc     score
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;         &lt;numeric&gt; &lt;integer&gt;
+##   [1]       VI 3317-3851      - |     YFL064C 0.672622985672206         0
+##   [2]       VI 3025-3343      - |     YFL065C 0.168389319442213         0
+##   [3]       VI 1432-2620      - |     YFL066C 0.081997754285112         1
+##   [4]       VI 5061-5526      + |     YFL063W 0.358257586602122         0
+##   [5]       VI 6421-7570      + |     YFL062W 0.557314032688737         1
+##   [6]       VI  831-1368      + |     YFL067W 0.826518925838172         0
+##   -------
+##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+<p>There are additional anchors that account for the strandedness of features,
+we can fix the 3’ or 5’ parts of a GRanges object using <code>anchor_3p()</code>
+or <code>anchor_5p()</code>, respectively.</p>
+<p>The plyranges and GenomicRanges API also have utilities to modify
+genomic regions via standard set operations like taking the complement
+(<code>complement_ranges()</code>) which will find gaps, or finding flanking ranges
+(see <code>flank_left()</code> and friends) or promoters (<code>GenomicRanges::promoters()</code>).</p>
+<div id="exercises-1" class="section level3">
+<h3>Exercises</h3>
+<ol style="list-style-type: decimal">
+<li>Create a new GRanges object from CpG islands that stretches the intervals
+on either side by their width while leaving the centre of the interval fixed.</li>
+<li>Create a new GRanges object from exons that has only non-exonic regions.</li>
+<li>Create a new GRanges object that represent 2bp canonical splice sites
+on either side of exon (hint: you can do this with anchoring and mutate
+or with flank).</li>
+</ol>
+</div>
+</div>
+<div id="summarise-annotations-and-measurements-with-summarise" class="section level2">
+<h2>Summarise annotations and measurements with <code>summarise()</code></h2>
+<p>We can compute summarise columns GRanges object using <code>summarise()</code>. Using
+<code>summarise()</code> is very similiar to <code>mutate()</code>, we construct new columns
+that are summaries of the columns in the input the GRanges.</p>
+<pre class="r"><code>exons %&gt;% 
+  summarise(
+    count = n(),
+    median_width = median(width)
+  )</code></pre>
+<pre><code>## DataFrame with 1 row and 2 columns
+##       count median_width
+##   &lt;integer&gt;    &lt;numeric&gt;
+## 1    459752          133</code></pre>
+<p>The main difference is that by summarising our data, we lose the necessary
+information required to form a valid GRanges. Instead, <code>summarise()</code> returns
+a <code>DataFrame</code> (see <code>S4Vectors::DataFrame()</code> for more information). The
+<code>DataFrame</code> is the Bioconductor version of the base R data.frame. It works
+mostly the same way as the base R <code>data.frame</code> but can also hold data structures
+that are common in Bioconductor (like <code>Rle</code> mentioned above).</p>
+<div id="exercises-2" class="section level3">
+<h3>Exercises</h3>
+<ol style="list-style-type: decimal">
+<li>What is the average length of CpG islands accross the genome?</li>
+<li>How many distinct transcript identifiers are there in exons?</li>
+</ol>
+</div>
+</div>
+<div id="summarise-over-the-genome-with-reduce_ranges-and-disjoin_ranges" class="section level2">
+<h2>Summarise over the genome with <code>reduce_ranges()</code> and <code>disjoin_ranges()</code></h2>
+<p>To preserve the GRanges data structure while performing summaries, it
+is often useful to either merge overlapping ranges (called reducing) or expand
+ranges by finding the union of the end points or ranges (called disjoining).</p>
+<p>To make this more concrete let’s <code>reduce_ranges()</code> and <code>disjoin_ranges()</code>
+on the <code>genes</code> object we defined above.</p>
+<pre class="r"><code># to make things easier to compare 
+# sort by the start and end coordinates
+genes %&gt;% 
+  arrange(start, end)</code></pre>
+<pre><code>## GRanges object with 6 ranges and 3 metadata columns:
+##       seqnames    ranges strand |     gene_id                gc     score
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;         &lt;numeric&gt; &lt;integer&gt;
+##   [1]       VI  836-1363      + |     YFL067W 0.826518925838172         0
+##   [2]       VI 1437-2615      - |     YFL066C 0.081997754285112         1
+##   [3]       VI 3030-3338      - |     YFL065C 0.168389319442213         0
+##   [4]       VI 3322-3846      - |     YFL064C 0.672622985672206         0
+##   [5]       VI 5066-5521      + |     YFL063W 0.358257586602122         0
+##   [6]       VI 6426-7565      + |     YFL062W 0.557314032688737         1
+##   -------
+##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+<pre class="r"><code># reduce_ranges will merge the 3rd and 4th ranges above
+genes %&gt;% 
+  reduce_ranges()</code></pre>
+<pre><code>## GRanges object with 5 ranges and 0 metadata columns:
+##       seqnames    ranges strand
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+##   [1]       VI  836-1363      *
+##   [2]       VI 1437-2615      *
+##   [3]       VI 3030-3846      *
+##   [4]       VI 5066-5521      *
+##   [5]       VI 6426-7565      *
+##   -------
+##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+<pre class="r"><code># disjoin ranges will split the 3rd and 4th ranges into
+# 3 disjoint ranges. 
+genes %&gt;% 
+  disjoin_ranges()</code></pre>
+<pre><code>## GRanges object with 7 ranges and 0 metadata columns:
+##       seqnames    ranges strand
+##          &lt;Rle&gt; &lt;IRanges&gt;  &lt;Rle&gt;
+##   [1]       VI  836-1363      *
+##   [2]       VI 1437-2615      *
+##   [3]       VI 3030-3321      *
+##   [4]       VI 3322-3338      *
+##   [5]       VI 3339-3846      *
+##   [6]       VI 5066-5521      *
+##   [7]       VI 6426-7565      *
+##   -------
+##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</code></pre>
+<p>Note that by default, <code>reduce_ranges()</code> and <code>disjoin_ranges()</code> will discard
+any strand information. To preserve them use <code>reduce_ranges_directed()</code> and
+<code>disjoin_ranges_directed()</code>.</p>
+<p>The <code>reduce_ranges()</code> and <code>disjoin_ranges()</code> can perform aggregation too.
+For example, we can reduce exons and count the number of exons
+that were merged together, and concatenate the names of the exons that were
+merged.</p>
+<pre class="r"><code>exons %&gt;% 
+  reduce_ranges(
+    count = n(),
+    name = paste(name, collapse = &quot;,&quot;)
+  )</code></pre>
+<pre><code>## GRanges object with 229241 ranges and 2 metadata columns:
+##            seqnames            ranges strand |     count
+##               &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;
+##        [1]     chr1       11874-12227      * |         1
+##        [2]     chr1       12613-12721      * |         1
+##        [3]     chr1       13221-14829      * |         2
+##        [4]     chr1       14970-15038      * |         1
+##        [5]     chr1       15796-15947      * |         1
+##        ...      ...               ...    ... .       ...
+##   [229237]     chrY 59337091-59337236      * |         2
+##   [229238]     chrY 59337949-59338150      * |         2
+##   [229239]     chrY 59338754-59338859      * |         2
+##   [229240]     chrY 59340194-59340278      * |         1
+##   [229241]     chrY 59342487-59343488      * |         2
+##                                                                             name
+##                                                                      &lt;character&gt;
+##        [1]                                       NR_046018_exon_0_0_chr1_11874_f
+##        [2]                                       NR_046018_exon_1_0_chr1_12613_f
+##        [3]       NR_046018_exon_2_0_chr1_13221_f,NR_024540_exon_0_0_chr1_14362_r
+##        [4]                                       NR_024540_exon_1_0_chr1_14970_r
+##        [5]                                       NR_024540_exon_2_0_chr1_15796_r
+##        ...                                                                   ...
+##   [229237] NM_002186_exon_4_0_chrY_59337091_f,NM_176786_exon_5_0_chrY_59337120_f
+##   [229238] NM_002186_exon_5_0_chrY_59337949_f,NM_176786_exon_6_0_chrY_59337949_f
+##   [229239] NM_002186_exon_6_0_chrY_59338754_f,NM_176786_exon_7_0_chrY_59338754_f
+##   [229240]                                    NM_002186_exon_7_0_chrY_59340194_f
+##   [229241] NM_002186_exon_8_0_chrY_59342487_f,NM_176786_exon_8_0_chrY_59342487_f
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<div id="exercises-3" class="section level3">
+<h3>Exercises</h3>
+<ol style="list-style-type: decimal">
+<li>Reduce CpG islands, what is the range that has the maximum number of nearby
+features?</li>
+<li>Confirm your results in 1. using <code>filter_by_overlaps()</code>.</li>
+</ol>
+</div>
+</div>
+<div id="analyses-over-groups-with-group_by" class="section level2">
+<h2>Analyses over groups with <code>group_by()</code></h2>
+<p>Any of the above operations can be performed over subsets of the
+<code>GRanges</code> object with <code>group_by()</code>, this often useful if you want to
+<code>filter()</code>/<code>mutate()</code>/<code>summarise()</code>/<code>reduce_ranges()</code>/<code>disjoin_ranges()</code>
+over annotation identifiers or chromosomes.</p>
+<pre class="r"><code>exons %&gt;% 
+  group_by(seqnames) %&gt;% 
+  summarise(
+    count = n(),
+    median_width = median(width)
+  )</code></pre>
+<pre><code>## DataFrame with 49 rows and 3 columns
+##                 seqnames     count median_width
+##                    &lt;Rle&gt; &lt;integer&gt;    &lt;numeric&gt;
+## 1                   chr1     43366          137
+## 2   chr1_gl000191_random        42          163
+## 3   chr1_gl000192_random        46          164
+## 4                  chr10     19420          131
+## 5                  chr11     24476          134
+## ...                  ...       ...          ...
+## 45        chrUn_gl000222        20          160
+## 46        chrUn_gl000223        22        179.5
+## 47        chrUn_gl000228        85         1380
+## 48                  chrX     18173          133
+## 49                  chrY      4128          118</code></pre>
+<div id="exercises-4" class="section level3">
+<h3>Exercises</h3>
+<p>Let’s read in another BED file that has functional annotations output by
+chromHMM from ENCODE human embryonic stem cell ChIP-seq data.</p>
+<pre class="r"><code>hesc_bed &lt;- system.file(&quot;extdata&quot;, &quot;hesc.chromHmm.bed&quot;, 
+                        package=&quot;HelloRangesData&quot;)
+
+hesc &lt;- read_bed(hesc_bed, genome_info = build)
+hesc</code></pre>
+<pre><code>## GRanges object with 619061 ranges and 1 metadata column:
+##            seqnames              ranges strand |              name
+##               &lt;Rle&gt;           &lt;IRanges&gt;  &lt;Rle&gt; |       &lt;character&gt;
+##        [1]     chr1         10001-10600      * | 15_Repetitive/CNV
+##        [2]     chr1         10601-11137      * | 13_Heterochrom/lo
+##        [3]     chr1         11138-11537      * |       8_Insulator
+##        [4]     chr1         11538-11937      * |       11_Weak_Txn
+##        [5]     chr1         11938-12137      * | 14_Repetitive/CNV
+##        ...      ...                 ...    ... .               ...
+##   [619057]     chrX 155256607-155258006      * |       11_Weak_Txn
+##   [619058]     chrX 155258007-155258606      * |       8_Insulator
+##   [619059]     chrX 155258607-155259606      * |       11_Weak_Txn
+##   [619060]     chrX 155259607-155259806      * | 14_Repetitive/CNV
+##   [619061]     chrX 155259807-155260406      * | 15_Repetitive/CNV
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>The name column is the predicted state of a range from chromHMM.</p>
+<p>Use the hesc GRanges object to answer the following:</p>
+<ol style="list-style-type: decimal">
+<li>How many ranges are there for each predicted state?</li>
+<li>How many base pairs are represented in the genome for each predicted state?
+Which state has the maximum number of bases?</li>
+</ol>
+</div>
+</div>
+<div id="finding-overlaps-with-the-join-operator" class="section level2">
+<h2>Finding overlaps with the join operator</h2>
+<p>A common operation on two GRanges is to find overlaps and to keep
+metadata associated with both GRanges objects when an overlap has
+occurred. We refer to this operation as an <em>overlap join</em>.
+There are three types of overlap join: inner (A), intersect (B), and left (C)
+that are shown on the figure below.</p>
+<pre class="r"><code>knitr::include_graphics(file.path(fig_path, &quot;olaps.png&quot;))</code></pre>
+<p>The first type of overlap join is called <code>join_overlap_inner()</code>, we could
+use this to find which CpG islands overlap exons</p>
+<pre class="r"><code>cpg2  &lt;- join_overlap_inner(cpg, exons)
+cpg2</code></pre>
+<pre><code>## GRanges object with 45500 ranges and 3 metadata columns:
+##           seqnames            ranges strand |      name.x
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
+##       [1]     chr1       28736-29810      * |    CpG:_116
+##       [2]     chr1     135125-135563      * |     CpG:_30
+##       [3]     chr1     327791-328229      * |     CpG:_29
+##       [4]     chr1     327791-328229      * |     CpG:_29
+##       [5]     chr1     327791-328229      * |     CpG:_29
+##       ...      ...               ...    ... .         ...
+##   [45496]     chrY 59213795-59214183      * |     CpG:_36
+##   [45497]     chrY 59213795-59214183      * |     CpG:_36
+##   [45498]     chrY 59213795-59214183      * |     CpG:_36
+##   [45499]     chrY 59213795-59214183      * |     CpG:_36
+##   [45500]     chrY 59213795-59214183      * |     CpG:_36
+##                                          name.y     score
+##                                     &lt;character&gt; &lt;numeric&gt;
+##       [1]      NR_024540_exon_10_0_chr1_29321_r         0
+##       [2]      NR_039983_exon_0_0_chr1_134773_r         0
+##       [3]      NR_028322_exon_2_0_chr1_324439_f         0
+##       [4]      NR_028325_exon_2_0_chr1_324439_f         0
+##       [5]      NR_028327_exon_3_0_chr1_327036_f         0
+##       ...                                   ...       ...
+##   [45496] NM_001145149_exon_0_0_chrY_59213949_f         0
+##   [45497] NM_001185183_exon_0_0_chrY_59213949_f         0
+##   [45498]    NM_005638_exon_0_0_chrY_59213949_f         0
+##   [45499]    NR_033714_exon_0_0_chrY_59213949_f         0
+##   [45500]    NR_033715_exon_0_0_chrY_59213949_f         0
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>Often we would are also interested in the amount of overlap, we can use
+the second type of overlap join <code>join_overlap_intersect()</code> to do this.
+We can modify the above example, to find which CpG islands overlap exons
+and how much the CpG island ranges overlap the exon ranges.</p>
+<pre class="r"><code>cpg3 &lt;- join_overlap_intersect(cpg, exons)
+cpg3</code></pre>
+<pre><code>## GRanges object with 45500 ranges and 3 metadata columns:
+##           seqnames            ranges strand |      name.x
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
+##       [1]     chr1       29321-29370      * |    CpG:_116
+##       [2]     chr1     135125-135563      * |     CpG:_30
+##       [3]     chr1     327791-328229      * |     CpG:_29
+##       [4]     chr1     327791-328229      * |     CpG:_29
+##       [5]     chr1     327791-328229      * |     CpG:_29
+##       ...      ...               ...    ... .         ...
+##   [45496]     chrY 59213949-59214117      * |     CpG:_36
+##   [45497]     chrY 59213949-59214117      * |     CpG:_36
+##   [45498]     chrY 59213949-59214117      * |     CpG:_36
+##   [45499]     chrY 59213949-59214117      * |     CpG:_36
+##   [45500]     chrY 59213949-59214117      * |     CpG:_36
+##                                          name.y     score
+##                                     &lt;character&gt; &lt;numeric&gt;
+##       [1]      NR_024540_exon_10_0_chr1_29321_r         0
+##       [2]      NR_039983_exon_0_0_chr1_134773_r         0
+##       [3]      NR_028322_exon_2_0_chr1_324439_f         0
+##       [4]      NR_028325_exon_2_0_chr1_324439_f         0
+##       [5]      NR_028327_exon_3_0_chr1_327036_f         0
+##       ...                                   ...       ...
+##   [45496] NM_001145149_exon_0_0_chrY_59213949_f         0
+##   [45497] NM_001185183_exon_0_0_chrY_59213949_f         0
+##   [45498]    NM_005638_exon_0_0_chrY_59213949_f         0
+##   [45499]    NR_033714_exon_0_0_chrY_59213949_f         0
+##   [45500]    NR_033715_exon_0_0_chrY_59213949_f         0
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<p>Finally, we sometimes would like to know where overlap occurs but also return
+any other ranges that are not overlapping. This is this the final type
+of overlap join <code>join_overlap_left()</code>.</p>
+<pre class="r"><code>cpg4 &lt;- join_overlap_left(cpg, exons)
+cpg4</code></pre>
+<pre><code>## GRanges object with 55346 ranges and 3 metadata columns:
+##           seqnames            ranges strand |      name.x
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;
+##       [1]     chr1       28736-29810      * |    CpG:_116
+##       [2]     chr1     135125-135563      * |     CpG:_30
+##       [3]     chr1     327791-328229      * |     CpG:_29
+##       [4]     chr1     327791-328229      * |     CpG:_29
+##       [5]     chr1     327791-328229      * |     CpG:_29
+##       ...      ...               ...    ... .         ...
+##   [55342]     chrY 59213795-59214183      * |     CpG:_36
+##   [55343]     chrY 59213795-59214183      * |     CpG:_36
+##   [55344]     chrY 59213795-59214183      * |     CpG:_36
+##   [55345]     chrY 59213795-59214183      * |     CpG:_36
+##   [55346]     chrY 59349267-59349574      * |     CpG:_29
+##                                          name.y     score
+##                                     &lt;character&gt; &lt;numeric&gt;
+##       [1]      NR_024540_exon_10_0_chr1_29321_r         0
+##       [2]      NR_039983_exon_0_0_chr1_134773_r         0
+##       [3]      NR_028322_exon_2_0_chr1_324439_f         0
+##       [4]      NR_028325_exon_2_0_chr1_324439_f         0
+##       [5]      NR_028327_exon_3_0_chr1_327036_f         0
+##       ...                                   ...       ...
+##   [55342] NM_001185183_exon_0_0_chrY_59213949_f         0
+##   [55343]    NM_005638_exon_0_0_chrY_59213949_f         0
+##   [55344]    NR_033714_exon_0_0_chrY_59213949_f         0
+##   [55345]    NR_033715_exon_0_0_chrY_59213949_f         0
+##   [55346]                                  &lt;NA&gt;      &lt;NA&gt;
+##   -------
+##   seqinfo: 94 sequences from 2 genomes (NA, hg19)</code></pre>
+<p>The type of overlap can be modified, by adding suffixes to the function call
+for example, to find overlaps that are within we could use
+<code>join_overlap_inner_within()</code>.</p>
+<div id="exercises-5" class="section level3">
+<h3>Exercises</h3>
+<ol style="list-style-type: decimal">
+<li>Create a new GRanges object, that has exons that are completely
+within Enhancers elements of hesc. How many exons are there?</li>
+<li>Use <code>join_overlap_intersect()</code> to filter exons if at least 50 per cent
+of their bases are overlapped by enhancer elements.</li>
+<li>Count the number of each enhancer element type that are exonic.
+There are several ways of doing this, but see if you can come up with a
+solution using <code>join_overlap_left()</code> + <code>disjoin_ranges()</code>.</li>
+</ol>
+</div>
+</div>
+<div id="summarising-coverage-with-compute_coverage" class="section level2">
+<h2>Summarising coverage with <code>compute_coverage()</code></h2>
+<p>Often we are interested in counting the number of features over
+the genome that overlap each other. In <code>plyranges</code> this is
+done with the <code>compute_coverage()</code> function in combination with other functions
+to manipulate the results. This function will always return a new GRanges
+with a column called score which contains the coverage value over a range.</p>
+<div id="coverage-values" class="section level3">
+<h3>Coverage values</h3>
+<p>By default, <code>compute_coverage()</code> returns all coverage scores even if there is
+no coverage over a genomic region.</p>
+<pre class="r"><code>cvg &lt;- exons %&gt;% 
+  compute_coverage()
+
+cvg</code></pre>
+<pre><code>## GRanges object with 369095 ranges and 1 metadata column:
+##            seqnames            ranges strand |     score
+##               &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;
+##        [1]     chr1           1-11873      * |         0
+##        [2]     chr1       11874-12227      * |         1
+##        [3]     chr1       12228-12612      * |         0
+##        [4]     chr1       12613-12721      * |         1
+##        [5]     chr1       12722-13220      * |         0
+##        ...      ...               ...    ... .       ...
+##   [369091]     chrY 59338860-59340193      * |         0
+##   [369092]     chrY 59340194-59340278      * |         1
+##   [369093]     chrY 59340279-59342486      * |         0
+##   [369094]     chrY 59342487-59343488      * |         2
+##   [369095]     chrY 59343489-59373566      * |         0
+##   -------
+##   seqinfo: 93 sequences from an unspecified genome</code></pre>
+<pre class="r"><code>cvg %&gt;% filter(score &gt; 0)</code></pre>
+<pre><code>## GRanges object with 190925 ranges and 1 metadata column:
+##            seqnames            ranges strand |     score
+##               &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt;
+##        [1]     chr1       11874-12227      * |         1
+##        [2]     chr1       12613-12721      * |         1
+##        [3]     chr1       13221-14361      * |         1
+##        [4]     chr1       14362-14409      * |         2
+##        [5]     chr1       14410-14829      * |         1
+##        ...      ...               ...    ... .       ...
+##   [190921]     chrY 59337120-59337236      * |         2
+##   [190922]     chrY 59337949-59338150      * |         2
+##   [190923]     chrY 59338754-59338859      * |         2
+##   [190924]     chrY 59340194-59340278      * |         1
+##   [190925]     chrY 59342487-59343488      * |         2
+##   -------
+##   seqinfo: 93 sequences from an unspecified genome</code></pre>
+<p>Also note that computing coverage will result in a GRanges that is disjoint,
+which you can check with <code>isDisjoint()</code> from GenomicRanges.</p>
+</div>
+<div id="coverage-histogram" class="section level3">
+<h3>Coverage histogram</h3>
+<p>We can <code>summarise()</code> the coverage scores as a histogram over all chromosomes
+in a genome using <code>group_by()</code>.</p>
+<p>We count the total number of bases (that is, the width of the range) over
+each chromosome over each coverage score.</p>
+<pre class="r"><code>cvg_hist &lt;- cvg %&gt;%
+  group_by(seqnames, score) %&gt;% 
+  summarise(count = sum(width))</code></pre>
+<p>We can also compute the coverage histogram over the entire genome by grouping
+over the scores. Note that we coerce the width to a numeric
+to avoid integer overflow, when summing.</p>
+<pre class="r"><code>cvg_hist_all &lt;- cvg %&gt;% 
+  mutate(total_length = as.numeric(width)) %&gt;% 
+  group_by(score) %&gt;% 
+  summarise(
+    seqnames = &quot;genome&quot;, 
+    count = sum(total_length)
+  )</code></pre>
+<p>Then the results can be put together using <code>rbind()</code> or plotted using
+your favourite plotting package.</p>
+</div>
+<div id="a-more-complicated-example" class="section level3">
+<h3>A more complicated example</h3>
+<p>Here we perform another example where we find exons with no coverage that
+overlap cpg islands. To compose a chain first we compute the coverage
+then use a filter to restrict to zero coverage ranges. Then we
+perform an inner overlap join to find which cpg islands overlap the exonic
+regions with zero coverage.</p>
+<pre class="r"><code>overlaps &lt;- exons %&gt;% 
+  compute_coverage() %&gt;% 
+  filter(score == 0L) %&gt;% 
+  join_overlap_inner(.,  cpg) 
+
+overlaps</code></pre>
+<pre><code>## GRanges object with 29354 ranges and 2 metadata columns:
+##           seqnames            ranges strand |     score        name
+##              &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;integer&gt; &lt;character&gt;
+##       [1]     chr1       24892-29320      * |         0    CpG:_116
+##       [2]     chr1       29371-34610      * |         0    CpG:_116
+##       [3]     chr1     368598-621095      * |         0     CpG:_84
+##       [4]     chr1     368598-621095      * |         0     CpG:_99
+##       [5]     chr1     368598-621095      * |         0     CpG:_94
+##       ...      ...               ...    ... .       ...         ...
+##   [29350]     chrY 27879536-59100456      * |         0     CpG:_32
+##   [29351]     chrY 27879536-59100456      * |         0     CpG:_25
+##   [29352]     chrY 59115124-59213948      * |         0     CpG:_36
+##   [29353]     chrY 59214118-59222126      * |         0     CpG:_36
+##   [29354]     chrY 59343489-59373566      * |         0     CpG:_29
+##   -------
+##   seqinfo: 93 sequences from an unspecified genome</code></pre>
+<p>We can also compute the coverage histogram of exons over cpg islands
+and then plot results as an ecdf.</p>
+<pre class="r"><code>cvg_over_exons &lt;- exons %&gt;% 
+  compute_coverage() %&gt;%
+  join_overlap_inner(., cpg) %&gt;%
+  mutate(
+    total_length = as.numeric(width),
+    genome_length = sum(total_length)
+  ) %&gt;% 
+  group_by(score, genome_length) %&gt;%
+  summarise(
+    count = sum(total_length),
+    fraction = sum(total_length) / unique(genome_length)
+  ) 
+
+cvg_over_exons</code></pre>
+<pre><code>## DataFrame with 24 rows and 4 columns
+##         score genome_length      count             fraction
+##     &lt;integer&gt;     &lt;numeric&gt;  &lt;numeric&gt;        &lt;NumericList&gt;
+## 1           0    3410479622 3401251108    0.997294071502299
+## 2           1    3410479622    6145937  0.00180207410135348
+## 3           2    3410479622    1802697 0.000528575801588531
+## 4           3    3410479622     649594 0.000190469984283049
+## 5           4    3410479622     267055 7.83042356498209e-05
+## ...       ...           ...        ...                  ...
+## 20         20    3410479622        132 3.87042336064719e-08
+## 21         23    3410479622       7676 2.25070982699453e-06
+## 22         24    3410479622        169 4.95531475719224e-08
+## 23         25    3410479622        161 4.72074364442574e-08
+## 24         77    3410479622       1157 3.39248471838545e-07</code></pre>
+<pre class="r"><code>plot(1 - cumsum(fraction) ~ score, 
+     data = cvg_over_exons, 
+     xlim = c(0,30), 
+     type= &quot;s&quot;, 
+     xlab = &quot;coverage&quot;, 
+     ylab = &quot;fraction of bp &gt; coverage&quot;)</code></pre>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABUAAAAPACAMAAADDuCPrAAADAFBMVEUAAAABAQECAgIDAwMEBAQFBQUGBgYHBwcICAgJCQkKCgoLCwsMDAwNDQ0ODg4PDw8QEBARERESEhITExMUFBQVFRUWFhYXFxcYGBgZGRkaGhobGxscHBwdHR0eHh4fHx8gICAhISEiIiIjIyMkJCQlJSUmJiYnJycoKCgpKSkqKiorKyssLCwtLS0uLi4vLy8wMDAxMTEyMjIzMzM0NDQ1NTU2NjY3Nzc4ODg5OTk6Ojo7Ozs8PDw9PT0+Pj4/Pz9AQEBBQUFCQkJDQ0NERERFRUVGRkZHR0dISEhJSUlKSkpLS0tMTExNTU1OTk5PT09QUFBRUVFSUlJTU1NUVFRVVVVWVlZXV1dYWFhZWVlaWlpbW1tcXFxdXV1eXl5fX19gYGBhYWFiYmJjY2NkZGRlZWVmZmZnZ2doaGhpaWlqampra2tsbGxtbW1ubm5vb29wcHBxcXFycnJzc3N0dHR1dXV2dnZ3d3d4eHh5eXl6enp7e3t8fHx9fX1+fn5/f3+AgICBgYGCgoKDg4OEhISFhYWGhoaHh4eIiIiJiYmKioqLi4uMjIyNjY2Ojo6Pj4+QkJCRkZGSkpKTk5OUlJSVlZWWlpaXl5eYmJiZmZmampqbm5ucnJydnZ2enp6fn5+goKChoaGioqKjo6OkpKSlpaWmpqanp6eoqKipqamqqqqrq6usrKytra2urq6vr6+wsLCxsbGysrKzs7O0tLS1tbW2tra3t7e4uLi5ubm6urq7u7u8vLy9vb2+vr6/v7/AwMDBwcHCwsLDw8PExMTFxcXGxsbHx8fIyMjJycnKysrLy8vMzMzNzc3Ozs7Pz8/Q0NDR0dHS0tLT09PU1NTV1dXW1tbX19fY2NjZ2dna2trb29vc3Nzd3d3e3t7f39/g4ODh4eHi4uLj4+Pk5OTl5eXm5ubn5+fo6Ojp6enq6urr6+vs7Ozt7e3u7u7v7+/w8PDx8fHy8vLz8/P09PT19fX29vb39/f4+Pj5+fn6+vr7+/v8/Pz9/f3+/v7////isF19AAAACXBIWXMAAB2HAAAdhwGP5fFlAAAgAElEQVR4nO3deWBU5b3w8V8gIeyaICDKFQyu1SoFjBVtUUsVoWhvlSp6WxHZyluFSpGLRMFbNq2V0s1L375qBW+ta+uC9nqLVm2xVcilLlBkqai4ICAoezLzzpmZJDNJYOb88pznnDPn+/mDnDPJPM/pifPtZJZnJA4AUBG/DwAAwoqAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUApUAH9O2bpgGAKf+xy3CjAh3QGwUAzPmt4UYFOqDfk6/NBwAzviCLDTcq4AG90+9DAFAw/o2AAoAOAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQJ6EJ9sy2WHp0cKIPgIaPMW5v40vqJfe3usAIKOgDbv4e5lObSTad4eK4CgI6Ba8wkoEHUEVIuAApFHQLUIKBB5BFSLgAKR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I6AIgAPHi1yzO7GxJ3Ff9N/jzquV5EznTfGx+a2k+PXkz+xsK/1Ffpy6whSRytXOxqZTRH7vbDQEdKHIzcmNN5z3Hb2a2NjbS2TCvsTGP/vWvROp6QCAewQUQfDXxD3Df7ny1u/0FDndeUXou11FOn9txpjPpd8L77gssV3yUWp79+kibb52482XtRH5bvK+a0NA17UX+cbPFs/5mshJIidM3R6PP18s0vtbN19ymAw9Xq5tfgDAPQKKQHi+a/oVRWevT+7/46S61ZjuyHj+R75R9/NbB6e/X3x98m3vGQGN31+c+laHn3zQLfHlncRFv++Uuuibu4+R65sfAHCPgCIYdtw2sEvp5y69vy6X+//fsB4lh50+dWP9T+zpnHpFaErsySuOKe06cOK69H5GQOPrRp/W4bB+MzcntsYNvT75kvz3ppzQtvy8B2MHWsutzQ8AuEdAESkbRB70+xhQOAgoCt/TV131anqzSmS9r8eCgkJAUfhWivxr6qWeaztIf58PBoWEgKLwxc4Uufi5rZ9W395e5HG/jwYFhIAiAj6s+8Sl1KtMAUMIKKLgszt7J1+ydM4TuX8WyBsBRUR89vpLr33m90GgwBBQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQImAAoASAQUAJQIKAEoEFACUCCgAKBFQAFAioACgREABQOn/A+uFMoyp8/TPAAAAAElFTkSuQmCC" width="672" /></p>
+</div>
+</div>
+</div>
+<div id="learning-more" class="section level1">
+<h1>Learning more</h1>
+<p>We have touched the surface of what’s possible with plyranges and
+GenomicRanges. A good starting point to learn more about GenomicRanges
+is <a href="https://bioconductor.github.io/BiocWorkshops/solving-common-bioinformatic-challenges-using-genomicranges.html">here</a> and plyranges is <a href="https://bioconductor.github.io/BiocWorkshops/fluent-genomic-data-analysis-with-plyranges.html">here</a>.</p>
+<p>If you have any questions about the use of these packages, please ask
+a question on <a href="https://support.bioconductor.org/">support.bioconductor.org</a>
+or post an issue on <a href="https://github.com/sa-lee/plyranges">github</a>.</p>
+<p>The solutions to the exorcises can be found <a href="solutions.html">here</a>.</p>
+</div>
+
+
+
+
+                </section>
+            </div><footer role="contentinfo">
+  <div class="wrap">
+    <p>
+      This project is maintained by
+      <a href="https://github.com/Bioconductor">Bioconductor</a
+      >.
+    </p>
+
+    <p>
+      Hosted on
+      <a href="#">GitHub</a>.
+    </p>
+    <p>
+      <a href="https://github.com/Bioconductor/BiocWorkshops2019/edit/master/content/page/plyrangesWorkshops__common-tasks.html">
+          Edit this page</a> or <a href="https://github.com/Bioconductor/BiocWorkshops2019/issues">
+        file an issue</a> on
+      github.
+    </p>
+  </div>
+  
+</footer>
+</div>
+    </body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html><head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta charset="utf-8">
+  <title>
+      
+  </title>
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="../../assets/css/normalize.css">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/syntax.css">
+  
+
+</head>
+<body>
+        <div class="container"><header role="banner">
+  <div class="wrap">
+    
+      <img class="logo" src="../.././imgs/cover.png" alt="bioconductor" style="height:60px">
+    
+    <h1 class="site-title"><a class="title-link" href="../../">BiocWorkshops2019</a></h1>
+  </div>
+</header>
+<div class="wrap content">
+                <section id="main" class="main-content" role="main">
+
+
+
+
+
+<p>These are the solutions to the exercises found in
+<a href="common-tasks.html">Common Genomic Data Wrangling Tasks</a>.</p>
+<div id="data" class="section level1">
+<h1>Data</h1>
+<p>We need to read in three files from HelloRangesData</p>
+<ul>
+<li>exons.bed (RefSeq hg19 annotated exons)</li>
+<li>cpg.bed (RefSeq hg19 annotated CpG islands)</li>
+<li>hesc.chromHmm.bed (predicted functional elements from chromHMM program)</li>
+</ul>
+<pre class="r"><code>suppressPackageStartupMessages(library(plyranges))
+# our genome build
+build &lt;- system.file(&quot;extdata&quot;, &quot;hg19.genome&quot;, package=&quot;HelloRangesData&quot;) %&gt;% 
+  read.delim(header = FALSE, col.names = c(&quot;seqnames&quot;, &quot;width&quot;)) %&gt;% 
+  as_granges(start = 1) %&gt;% 
+  set_genome_info(genome = &quot;hg19&quot;, 
+                  seqlengths = width(.))
+
+exons &lt;- system.file(&quot;extdata&quot;, &quot;exons.bed&quot;, package=&quot;HelloRangesData&quot;) %&gt;% 
+  read_bed(genome_info = build)
+
+cpg &lt;- system.file(&quot;extdata&quot;, &quot;cpg.bed&quot;, package=&quot;HelloRangesData&quot;) %&gt;% 
+  read_bed(genome_info = build)
+
+hesc &lt;- system.file(&quot;extdata&quot;, &quot;hesc.chromHmm.bed&quot;, package=&quot;HelloRangesData&quot;) %&gt;% 
+  read_bed(genome_info = build)</code></pre>
+<div id="solutions" class="section level2">
+<h2>Solutions</h2>
+<div id="filtering-and-mutating" class="section level3">
+<h3>Filtering and mutating</h3>
+<ol style="list-style-type: decimal">
+<li>Modify the above example so only CpG islands that are completely
+within exons are included in the result.</li>
+</ol>
+<pre class="r"><code>cpg %&gt;% 
+  mutate(is_contained = . %within% exons) %&gt;% 
+  filter(is_contained)</code></pre>
+<pre><code>## GRanges object with 2235 ranges and 2 metadata columns:
+##          seqnames            ranges strand |        name is_contained
+##             &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; | &lt;character&gt;    &lt;logical&gt;
+##      [1]     chr1     135125-135563      * |     CpG:_30         TRUE
+##      [2]     chr1     327791-328229      * |     CpG:_29         TRUE
+##      [3]     chr1     788864-789211      * |     CpG:_28         TRUE
+##      [4]     chr1     990275-990694      * |     CpG:_29         TRUE
+##      [5]     chr1   1132828-1133218      * |     CpG:_40         TRUE
+##      ...      ...               ...    ... .         ...          ...
+##   [2231]     chrY     171535-171828      * |     CpG:_23         TRUE
+##   [2232]     chrY   1496664-1497002      * |     CpG:_32         TRUE
+##   [2233]     chrY   2356771-2358703      * |    CpG:_133         TRUE
+##   [2234]     chrY 15815489-15815779      * |     CpG:_26         TRUE
+##   [2235]     chrY 16941823-16942188      * |     CpG:_32         TRUE
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<pre class="r"><code># or just 
+# cpg %&gt;% filter(. %within% exons)</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Create a new column in exons called tx_id (the transcript
+id is everything before _exon in name).</li>
+</ol>
+<pre class="r"><code># we can use the sub function in base R
+exons &lt;- exons %&gt;% 
+  mutate(tx_id = sub(&quot;_exon.*&quot;, &quot;&quot;, name))</code></pre>
+</div>
+<div id="modifying-genomic-regions" class="section level3">
+<h3>Modifying genomic regions</h3>
+<ol style="list-style-type: decimal">
+<li>Create a new GRanges object from CpG islands that stretches the intervals
+on either side by their width while leaving the centre of the interval fixed.</li>
+</ol>
+<pre class="r"><code>cpg_stretch &lt;- cpg %&gt;% 
+  anchor_centre() %&gt;% 
+  mutate(width = 2*width)
+
+# alternative is to use `stretch()`</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Create a new GRanges object from exons that has only non-exonic regions.</li>
+</ol>
+<pre class="r"><code>no_exon &lt;- exons %&gt;% complement_ranges()</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>Create a new GRanges object that represent 2bp canonical splice sites
+on either side of exon.</li>
+</ol>
+<pre class="r"><code># you can do this directly with mutate and anchors
+left &lt;- exons %&gt;% 
+  anchor_start() %&gt;% 
+  mutate(start = start - 2L, width = 2L)
+
+right &lt;- exons %&gt;% 
+  anchor_end() %&gt;% 
+  mutate(end = end + 2L,
+         width = 2L)
+
+sites &lt;- bind_ranges(list(left = left, right = right), .id = &quot;side&quot;)
+
+# or with flank_* family of functions
+identical(exons %&gt;% flank_left(2), left)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>identical(exons %&gt;% flank_right(2), right)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+</div>
+<div id="summarising-granges-objects" class="section level3">
+<h3>Summarising GRanges objects</h3>
+<ol style="list-style-type: decimal">
+<li>How many ranges are there for each predicted state?</li>
+<li>How many base pairs are represented in the genome for each predicted state?
+Which state has the maximum number of bases?</li>
+</ol>
+<pre class="r"><code>state_summary &lt;- hesc %&gt;% 
+  group_by(name) %&gt;% 
+  summarise(
+    n_ranges = n(), 
+    n_bases = sum(width)
+  )
+
+state_summary %&gt;% 
+  as.data.frame() %&gt;% 
+  filter(n_bases == max(n_bases))</code></pre>
+<pre><code>##                name n_ranges    n_bases
+## 1 13_Heterochrom/lo    91228 1992618522</code></pre>
+</div>
+<div id="overlaps" class="section level3">
+<h3>Overlaps</h3>
+<ol style="list-style-type: decimal">
+<li>Create a new GRanges object, that has exons that are completely
+within Enhancers elements of hesc. How many exons are there?</li>
+</ol>
+<pre class="r"><code>enhancers &lt;- hesc %&gt;% 
+  filter(grepl(&quot;Enhancer&quot;, name))
+
+exon_within &lt;- join_overlap_inner_within(exons, enhancers)
+
+exon_within</code></pre>
+<pre><code>## GRanges object with 13746 ranges and 4 metadata columns:
+##           seqnames              ranges strand |
+##              &lt;Rle&gt;           &lt;IRanges&gt;  &lt;Rle&gt; |
+##       [1]     chr1       948847-948956      + |
+##       [2]     chr1     1051440-1051736      - |
+##       [3]     chr1     1109286-1109306      + |
+##       [4]     chr1     1109804-1109869      + |
+##       [5]     chr1     1219358-1219470      + |
+##       ...      ...                 ...    ... .
+##   [13742]     chrX 153927569-153927788      - |
+##   [13743]     chrX 153927569-153927788      - |
+##   [13744]     chrX 153927569-153927788      - |
+##   [13745]     chrX 153927569-153927788      - |
+##   [13746]     chrX 154114409-154114577      - |
+##                                           name.x     score        tx_id
+##                                      &lt;character&gt; &lt;numeric&gt;  &lt;character&gt;
+##       [1]       NM_005101_exon_0_0_chr1_948847_f         0    NM_005101
+##       [2]      NM_017891_exon_9_0_chr1_1051440_r         0    NM_017891
+##       [3]   NM_001130045_exon_0_0_chr1_1109286_f         0 NM_001130045
+##       [4]   NM_001130045_exon_2_0_chr1_1109804_f         0 NM_001130045
+##       [5]   NM_001130413_exon_4_0_chr1_1219358_f         0 NM_001130413
+##       ...                                    ...       ...          ...
+##   [13742] NM_001081573_exon_4_0_chrX_153927569_r         0 NM_001081573
+##   [13743] NM_001282283_exon_3_0_chrX_153927569_r         0 NM_001282283
+##   [13744]    NM_080612_exon_4_0_chrX_153927569_r         0    NM_080612
+##   [13745]    NR_104114_exon_4_0_chrX_153927569_r         0    NR_104114
+##   [13746]    NM_019863_exon_4_0_chrX_154114409_r         0    NM_019863
+##                      name.y
+##                 &lt;character&gt;
+##       [1] 4_Strong_Enhancer
+##       [2]   6_Weak_Enhancer
+##       [3]   6_Weak_Enhancer
+##       [4]   6_Weak_Enhancer
+##       [5]   7_Weak_Enhancer
+##       ...               ...
+##   [13742]   6_Weak_Enhancer
+##   [13743]   6_Weak_Enhancer
+##   [13744]   6_Weak_Enhancer
+##   [13745]   6_Weak_Enhancer
+##   [13746]   6_Weak_Enhancer
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Use <code>join_overlap_intersect()</code> to filter exons if at least 50 per cent
+of their bases are overlapped by enhancer elements.</li>
+</ol>
+<pre class="r"><code>exons %&gt;% 
+  mutate(total_length = width) %&gt;% 
+  join_overlap_intersect(enhancers) %&gt;% 
+  filter(width / total_length &gt; 0.5)</code></pre>
+<pre><code>## GRanges object with 21151 ranges and 5 metadata columns:
+##           seqnames              ranges strand |
+##              &lt;Rle&gt;           &lt;IRanges&gt;  &lt;Rle&gt; |
+##       [1]     chr1         35738-35937      - |
+##       [2]     chr1         35738-35937      - |
+##       [3]     chr1       910938-911537      - |
+##       [4]     chr1       911938-912004      - |
+##       [5]     chr1       948847-948956      + |
+##       ...      ...                 ...    ... .
+##   [21147]     chrX 153927569-153927788      - |
+##   [21148]     chrX 154114409-154114577      - |
+##   [21149]     chrX 154300607-154300618      + |
+##   [21150]     chrX 154300607-154300618      + |
+##   [21151]     chrX 154300607-154300618      + |
+##                                           name.x     score        tx_id
+##                                      &lt;character&gt; &lt;numeric&gt;  &lt;character&gt;
+##       [1]        NR_026818_exon_2_0_chr1_35721_r         0    NR_026818
+##       [2]        NR_026820_exon_2_0_chr1_35721_r         0    NR_026820
+##       [3]       NR_027693_exon_0_0_chr1_910579_r         0    NR_027693
+##       [4]       NR_027693_exon_1_0_chr1_911879_r         0    NR_027693
+##       [5]       NM_005101_exon_0_0_chr1_948847_f         0    NM_005101
+##       ...                                    ...       ...          ...
+##   [21147]    NR_104114_exon_4_0_chrX_153927569_r         0    NR_104114
+##   [21148]    NM_019863_exon_4_0_chrX_154114409_r         0    NM_019863
+##   [21149] NM_001018055_exon_1_0_chrX_154300602_f         0 NM_001018055
+##   [21150] NM_001242640_exon_1_0_chrX_154300602_f         0 NM_001242640
+##   [21151]    NM_024332_exon_1_0_chrX_154300602_f         0    NM_024332
+##           total_length            name.y
+##              &lt;integer&gt;       &lt;character&gt;
+##       [1]          361   7_Weak_Enhancer
+##       [2]          361   7_Weak_Enhancer
+##       [3]         1071   6_Weak_Enhancer
+##       [4]          126   6_Weak_Enhancer
+##       [5]          110 4_Strong_Enhancer
+##       ...          ...               ...
+##   [21147]          220   6_Weak_Enhancer
+##   [21148]          169   6_Weak_Enhancer
+##   [21149]           17   6_Weak_Enhancer
+##   [21150]           17   6_Weak_Enhancer
+##   [21151]           17   6_Weak_Enhancer
+##   -------
+##   seqinfo: 93 sequences from hg19 genome</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>Count the number of each enhancer element type that are exonic.
+There are several ways of doing this, but see if you can come up with a
+solution using <code>join_overlap_left()</code> + <code>disjoin_ranges()</code>.</li>
+</ol>
+<pre class="r"><code>enhancers %&gt;% 
+  join_overlap_left(exons) %&gt;% 
+  group_by(name.x) %&gt;% 
+  disjoin_ranges(olap_any = all(!is.na(tx_id))) %&gt;% 
+  group_by(name.x) %&gt;% 
+  summarise(prop = sum(olap_any) / n())</code></pre>
+<pre><code>## DataFrame with 4 rows and 2 columns
+##              name.x               prop
+##         &lt;character&gt;          &lt;numeric&gt;
+## 1 4_Strong_Enhancer  0.129369300911854
+## 2 5_Strong_Enhancer 0.0830471433031533
+## 3   6_Weak_Enhancer 0.0921656261823685
+## 4   7_Weak_Enhancer 0.0614762445084519</code></pre>
+</div>
+</div>
+</div>
+
+
+
+
+                </section>
+            </div><footer role="contentinfo">
+  <div class="wrap">
+    <p>
+      This project is maintained by
+      <a href="https://github.com/Bioconductor">Bioconductor</a
+      >.
+    </p>
+
+    <p>
+      Hosted on
+      <a href="#">GitHub</a>.
+    </p>
+    <p>
+      <a href="https://github.com/Bioconductor/BiocWorkshops2019/edit/master/content/page/plyrangesWorkshops__solutions.html">
+          Edit this page</a> or <a href="https://github.com/Bioconductor/BiocWorkshops2019/issues">
+        file an issue</a> on
+      github.
+    </p>
+  </div>
+  
+</footer>
+</div>
+    </body>
+</html>

@@ -3,7 +3,7 @@ knit: "bookdown::render_book"
 title: "The Bioconductor 2019 Workshop Compilation"
 description: "This book contains all the workshops presented at the Bioconductor 2019 Conference"
 site: bookdown::bookdown_site
-github-repo: Bioconductor/BiocWorkshops
+github-repo: Bioconductor/BiocWorkshops2019
 documentclass: book
 geometry:
   - inner=1.25in

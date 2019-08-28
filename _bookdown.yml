@@ -1,6 +1,10 @@
-book_filename: "BioC2019"
+book_filename: "_BioC2019.md"
 pagetitle: "Bioconductor 2019 Workshops"
 new_session: yes
+
+language:
+  ui:
+    chapter_name: "Chapter "
 
 delete_merged_file: true
 

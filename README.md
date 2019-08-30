@@ -1,13 +1,17 @@
 
-This repository contains details of the build process and usage for materials 
-from the [Bioc2019 conference]. 
+This repository contains details of the build process and usage for materials
+from the [Bioc2019 conference].
 
-[Bioc2019 conference]: bioc2019.bioconductor.org
+[Bioc2019 conference]: https://bioc2019.bioconductor.org
+
+# Compiled Workshops Link
+
+https://rebrand.ly/biocworkshops2019
 
 # Running workshop materials locally
 
 The workshops (except the CWL workshop) are all installed and
-ready-to-run inside [docker]; you will need to *install docker* on your machine to 
+ready-to-run inside [docker]; you will need to *install docker* on your machine to
 follow along. We have a base docker image [seandavi/bioc_2019] that contains
 the operating system and base R installation. The workshops and additional package (over 600)
 are included as a separate download that can be mounted into the container
@@ -18,7 +22,7 @@ as a `volume`. To use the entire set of workshop materials, do:
     ```
     mkdir /home/ubuntu/bioc-libs # or another convenient directory with about 20GB of free space
     ```
- 
+
 - Download and untar entire tar.gz file with all installed packages and materials:
 
     ```
@@ -26,9 +30,9 @@ as a `volume`. To use the entire set of workshop materials, do:
     wget https://s3.amazonaws.com/biocbuild.cancerdatasci.org/bioc2019-usr-local.tar.gz
     tar -xzf bioc2019-usr-local.tar.gz
     ```
-    
+
 - Run docker locally with (you may or may not need `sudo` depending on your docker setup):
-    
+
     ```
     # again, use the directory from above
     sudo docker run --name bioc_2019 -d -v /home/ubuntu/bioc-libs:/usr/local/lib/R/site-library \
@@ -60,7 +64,7 @@ in the vignette using `system.file`
 4. Number **3** requires package chapter installation before vignette build or
 `build_vignettes=TRUE` when building the package.
 5. Use only one top-level section (`#`), for the title of your workshop. All other sections must be second-level (`##`) or lower. You may find the [usage section of the Bookdown documentation](https://bookdown.org/yihui/bookdown/usage.html) helpful for background.
-6. Do not use `BiocStyle` functionality. The style will be based on bookdown/gitbook. 
+6. Do not use `BiocStyle` functionality. The style will be based on bookdown/gitbook.
 
 ### DESCRIPTION
 
